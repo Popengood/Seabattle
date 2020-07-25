@@ -38,7 +38,7 @@
 			this.squadron = {};
 			this.matrix = [];
 
-			let {left, right, top, bottom} = getCoordinates(this.field);
+			let { left, right, top, bottom } = getCoordinates(this.field);
 			this.fieldLeft = left;
 			this.fieldRight = right;
 			this.fieldTop = top;
@@ -96,7 +96,7 @@
 		}
 
 		checkLocationShip(obj, decks) {
-			let {x, y, kx, ky, fromX, toX, fromY, toY} = obj;
+			let { x, y, kx, ky, fromX, toX, fromY, toY } = obj;
 
 			fromX = (x == 0) ? x : x - 1;
 			if (x + kx * decks == 10 && kx == 1) toX = x + kx * decks;
@@ -146,7 +146,7 @@
 		}
 
 		createShip() {
-			let {player, field, shipname, decks, k = 0, x, y, kx, ky, hits, arrDecks} = this;
+			let { player, field, shipname, decks, k = 0, x, y, kx, ky, hits, arrDecks } = this;
 
 			while (k < decks) {
 				let i = x + k * kx,
@@ -193,7 +193,7 @@
 			this.dragObject = {};
 			this.pressed = false;
 
-			let {left, right, top, bottom} = getCoordinates(this.field);
+			let { left, right, top, bottom } = getCoordinates(this.field);
 			this.fieldLeft = left;
 			this.fieldRight = right;
 			this.fieldTop = top;
@@ -248,7 +248,7 @@
 		onMouseMove(e) {
 			if (!this.pressed || !this.dragObject.el) return;
 
-			let {left, right, top, bottom} = getCoordinates(this.dragObject.el);
+			let { left, right, top, bottom } = getCoordinates(this.dragObject.el);
 
 			if (!this.clone) {
 				this.decks = Placement.getCloneDecks(this.dragObject.el);
@@ -388,7 +388,7 @@
 		createShipAfterEditing() {
 			// получаем координаты, пересчитанные относительно игрового поля
 			const coord = getCoordinates(this.clone);
-			let {left, top, x, y} = this.getCoordinatesCloneInMatrix(coord);
+			let { left, top, x, y } = this.getCoordinatesCloneInMatrix(coord);
 			this.clone.style.left = `${left}px`;
 			this.clone.style.top = `${top}px`;
 			// переносим клон внутрь игрового поля
@@ -457,14 +457,21 @@
 		}
 
 		static showServiceText = text => {
-			Controller.SERVICE_TEXT.innerHTML = '';
+			// Controller.SERVICE_TEXT.innerHTML = '';
 			Controller.SERVICE_TEXT.innerHTML = text;
 			setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
 		}
 
+		static getCoordinatesIcon(el) {
+			const obj = {};
+			obj.x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
+			obj.y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
+			return obj;
+		}
+
 		init() {
 			// Рандомно выбираем игрока и его противника для первого выстрела
-			const random = Field.getRandom(0); // !!!!!!!
+			const random = Field.getRandom(0); // заменить 0 на 1 !!!!!!!
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
 
@@ -476,10 +483,6 @@
 				this.text = 'Первым стреляет компьютер';
 			}
 			Controller.showServiceText(this.text);
-		}
-
-		makeShot() {
-
 		}
 
 		setEmptyCell(e) {
@@ -502,16 +505,16 @@
 
 		checkCell(coord) {
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
-			// const arr = [];
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
-				let x = icon.style.top.slice(0, -2) / Field.SHIP_SIDE,
-						y = icon.style.left.slice(0, -2) / Field.SHIP_SIDE;
-
+				const { x, y } = Controller.getCoordinatesIcon(icon);
 				if (coord.x == x && coord.y == y) {
 					if (icon.classList.contains('shaded-cell')) {
-						icon.parentElement.removeChild(icon);
+						const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
+						if (f == 'Controller.setEmptyCell') {
+							icon.parentElement.removeChild(icon);
+						}
 					}
 					return false;
 				}
@@ -524,6 +527,19 @@
 			span.className = `icon-field ${iconClass}`;
 			span.style.cssText = `left:${coord.y * Field.SHIP_SIDE}px; top:${coord.x * Field.SHIP_SIDE}px;`;
 			opponent.field.appendChild(span);
+		}
+
+		makeShot(e) {
+			if (e !== undefined) {
+				if (e.which != 1) return;
+
+				const coord = this.transformCoordinatesInMatrix(e, this.opponent);
+				// проверяем отсутствие иконки 'shaded-cell' по полученым координатам
+				for (let icon of icons) {
+				}
+			} else {
+				// получаем координаты для выстрела компьютера
+			}
 		}
 	}
 
