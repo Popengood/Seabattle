@@ -10,6 +10,7 @@
 
 	let startGame = false;
 	let isHandler = false;
+	let compShot = false;
 
 	const getElement = id => document.getElementById(id);
 	const getCoordinates = el => {
@@ -514,6 +515,10 @@
 						const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 						if (f == 'Controller.setEmptyCell') {
 							icon.parentElement.removeChild(icon);
+						} else {
+							Controller.showServiceText('Уберите маркер клетки игрового поля');
+							icon.classList.add('shaded-cell_red');
+							setTimeout(() => { icon.classList.remove('shaded-cell_red') }, 500);
 						}
 					}
 					return false;
@@ -531,14 +536,44 @@
 
 		makeShot(e) {
 			if (e !== undefined) {
-				if (e.which != 1) return;
-
-				const coord = this.transformCoordinatesInMatrix(e, this.opponent);
-				// проверяем отсутствие иконки 'shaded-cell' по полученым координатам
-				for (let icon of icons) {
-				}
+				if (e.which != 1 || compShot) return;
+				let { x, y } = this.transformCoordinatesInMatrix(e, this.opponent);
 			} else {
 				// получаем координаты для выстрела компьютера
+				// ...
+			}
+
+			// проверяем наличие иконки 'shaded-cell' по полученым координатам
+			this.checkCell({ x, y });
+
+			const v	= this.opponent.matrix[x][y];
+			switch(v) {
+				case 0: // промах
+					this.miss({ x, y });
+					break;
+				case 1: // попадание
+					break;
+				case 3: // повторный обстрел
+				case 4:
+					break;
+			}
+		}
+
+		miss({ x, y }) {
+			// устанавливаем иконку промаха и записываем промах в матрицу
+			this.showIcons(this.opponent, { x, y }, 'dot');
+			this.opponent.matrix[x][y] = 3;
+
+			// определяем статус игроков
+			if (this.player === human) {
+				Controller.showServiceText('Вы промахнулись. Стреляет компьютер.');
+				this.player = computer;
+				this.opponent = human;
+			} else {
+				Controller.showServiceText('Компьютер промахнулся. Ваш выстрел.');
+				this.player = human;
+				this.opponent = computer;
+
 			}
 		}
 	}
