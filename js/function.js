@@ -487,8 +487,8 @@
 		}
 
 		setEmptyCell(e) {
-			if (e.which != 3) return false;
 			e.preventDefault();
+			if (e !== undefined && e.which != 3 || compShot) return;
 
 			const coord = this.transformCoordinatesInMatrix(e, computer);
 			const check = this.checkCell(coord);
@@ -535,9 +535,10 @@
 		}
 
 		makeShot(e) {
+			let x, y;
 			if (e !== undefined) {
 				if (e.which != 1 || compShot) return;
-				let { x, y } = this.transformCoordinatesInMatrix(e, this.opponent);
+				({ x, y } = this.transformCoordinatesInMatrix(e, this.opponent));
 			} else {
 				// получаем координаты для выстрела компьютера
 				// ...
@@ -569,11 +570,12 @@
 				Controller.showServiceText('Вы промахнулись. Стреляет компьютер.');
 				this.player = computer;
 				this.opponent = human;
+				compShot = true;
 			} else {
 				Controller.showServiceText('Компьютер промахнулся. Ваш выстрел.');
 				this.player = human;
 				this.opponent = computer;
-
+				compShot = false;
 			}
 		}
 	}
