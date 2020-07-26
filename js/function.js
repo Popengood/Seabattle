@@ -146,8 +146,25 @@
 			this.arrDecks = [];
 		}
 
+		static showShip(self, shipname, x, y, kx) {
+			const div = document.createElement('div'),
+				  dir = (kx == 1) ? ' vertical' : '',
+				  classname = shipname.slice(0, -1);
+
+			// устанавливаем уникальный идентификатор для корабля
+			div.setAttribute('id', this.shipname);
+			// собираем в одну строку все классы 
+			div.className = `ship ${classname}${dir}`;
+			// через атрибут 'style' задаём позиционирование кораблю относительно
+			// его родительского элемента
+			// смещение вычисляется путём умножения координаты первой палубы на
+			// размер клетки игрового поля, этот размер совпадает с размером палубы
+			div.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
+			self.field.appendChild(div);
+		}
+
 		createShip() {
-			let { player, field, shipname, decks, k = 0, x, y, kx, ky, hits, arrDecks } = this;
+			let { player, field, shipname, decks, x, y, kx, ky, hits, arrDecks, k = 0 } = this;
 
 			while (k < decks) {
 				let i = x + k * kx,
@@ -161,28 +178,11 @@
 			player.squadron[shipname] = {arrDecks, hits, x, y, kx, ky};
 
 			if (player === human) {
-				this.showShip();
+				Ships.showShip(human, shipname, x, y, kx);
 				if (Object.keys(player.squadron).length == 10) {
 					buttonPlay.dataset.hidden = false;
 				}
 			}
-		}
-
-		showShip() {
-			const div = document.createElement('div'),
-				  dir = (this.kx == 1) ? ' vertical' : '',
-				  classname = this.shipname.slice(0, -1);
-
-			// устанавливаем уникальный идентификатор для корабля
-			div.setAttribute('id', this.shipname);
-			// собираем в одну строку все классы 
-			div.className = `ship ${classname}${dir}`;
-			// через атрибут 'style' задаём позиционирование кораблю относительно
-			// его родительского элемента
-			// смещение вычисляется путём умножения координаты первой палубы на
-			// размер клетки игрового поля, этот размер совпадает с размером палубы
-			div.style.cssText = `left:${this.y * Field.SHIP_SIDE}px; top:${this.x * Field.SHIP_SIDE}px;`;
-			human.field.appendChild(div);
 		}
 	}
 
