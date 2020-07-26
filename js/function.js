@@ -600,13 +600,13 @@
 						dataShip.hits++;
 						if (dataShip.hits == dataShip.arrDecks.length) {
 							if (this.opponent === computer) {
-								// код для выстрела компьютера
+								// код компьютера: сохраняем координаты первой палубы
 								// ...
 							}
-							delete dataShip;
+							delete this.opponent.squadron[name];
 						}
+						return;
 					}
-					break;
 				}
 			}
 
@@ -618,9 +618,8 @@
 					text = 'К сожалению, вы проиграли.'
 					// показываем оставшиеся корабли компьютера
 					for (let name in computer.squadron) {
-						const div = document.createElement('div'),
-									dir = (computer.squadron[name].kx == 1) ? 'vertical' : '',
-									name = name.
+						const dataShip = computer.squadron[name];
+						Ships.showShip(computer, name, dataShip.x, dataShip.y, dataShip.kx );
 					}
 				}
 				Controller.showServiceText(text);
