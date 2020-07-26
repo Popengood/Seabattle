@@ -552,6 +552,7 @@
 					this.miss({ x, y });
 					break;
 				case 1: // попадание
+				this.hit({ x, y });
 					break;
 				case 3: // повторный обстрел
 				case 4:
@@ -580,6 +581,52 @@
 				compShot = false;
 			}
 			Controller.showServiceText(text);
+		}
+
+		hit({ x, y }) {
+			let text = '';
+			// устанавливаем иконку попадания и записываем попадание в матрицу
+			this.showIcons(this.opponent, { x, y }, 'red-cross');
+			this.opponent.matrix[x][y] = 4;
+			text = (this.player === human) ? 'Поздравляем! Вы попали. Ваш выстрел.' : 'Компьютер попал в ваш корабль. Выстрел компьютера';
+			Controller.showServiceText(text);
+
+			// увеличиваем счётчик попаданий
+			// если счётчик === количеству палуб, удаляем корабль из эскадры
+			for (let name in this.opponent.squadron) {
+				const dataShip = this.opponent.squadron[name];
+				for (let value of dataShip.arrDecks) {
+					if (value[0] == x && value[1] == y) {
+						dataShip.hits++;
+						if (dataShip.hits == dataShip.arrDecks.length) {
+							if (this.opponent === computer) {
+								// код для выстрела компьютера
+								// ...
+							}
+							delete dataShip;
+						}
+					}
+					break;
+				}
+			}
+
+			// все корабли эскадры уничтожены
+			if (this.opponent.squadron.length == 0) {
+				if (this.opponent === human) {
+					text = 'Поздравляем! Вы выиграли!'
+				} else {
+					text = 'К сожалению, вы проиграли.'
+					// показываем оставшиеся корабли компьютера
+					for (let name in computer.squadron) {
+						const div = document.createElement('div'),
+									dir = (computer.squadron[name].kx == 1) ? 'vertical' : '',
+									name = name.
+					}
+				}
+				Controller.showServiceText(text);
+				// reset массивов и флагов для для начала новой игры
+				// ...
+			}
 		}
 	}
 
