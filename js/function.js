@@ -458,9 +458,9 @@
 		}
 
 		static showServiceText = text => {
-			// Controller.SERVICE_TEXT.innerHTML = '';
 			Controller.SERVICE_TEXT.innerHTML = text;
-			setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
+			let tm = 0;
+			tm = setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
 		}
 
 		static getCoordinatesIcon(el) {
@@ -491,10 +491,10 @@
 			if (e !== undefined && e.which != 3 || compShot) return;
 
 			const coord = this.transformCoordinatesInMatrix(e, computer);
-			const check = this.checkCell(coord);
+			const check = this.checkShadedCell(coord);
 			if (check) {
 				this.showIcons(this.opponent, coord, 'shaded-cell');
-			}
+			} 
 		}
 
 		transformCoordinatesInMatrix(e, self) {
@@ -504,22 +504,20 @@
 			return obj;
 		}
 
-		checkCell(coord) {
+		checkShadedCell(coord) {
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
 				const { x, y } = Controller.getCoordinatesIcon(icon);
-				if (coord.x == x && coord.y == y) {
-					if (icon.classList.contains('shaded-cell')) {
-						const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
-						if (f == 'Controller.setEmptyCell') {
-							icon.parentElement.removeChild(icon);
-						} else {
-							Controller.showServiceText('Уберите маркер клетки игрового поля');
-							icon.classList.add('shaded-cell_red');
-							setTimeout(() => { icon.classList.remove('shaded-cell_red') }, 500);
-						}
+				if (coord.x == x && coord.y == y && icon.classList.contains('shaded-cell')) {
+					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
+					if (f == 'Controller.setEmptyCell') {
+						icon.parentElement.removeChild(icon);
+					} else {
+						Controller.showServiceText('Уберите маркер клетки игрового поля');
+						icon.classList.add('shaded-cell_red');
+						setTimeout(() => { icon.classList.remove('shaded-cell_red') }, 500);
 					}
 					return false;
 				}
@@ -545,7 +543,8 @@
 			}
 
 			// проверяем наличие иконки 'shaded-cell' по полученым координатам
-			this.checkCell({ x, y });
+			const check = this.checkShadedCell({ x, y });
+			if (!check) return;
 
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
@@ -561,22 +560,26 @@
 		}
 
 		miss({ x, y }) {
+			let text = '';
 			// устанавливаем иконку промаха и записываем промах в матрицу
 			this.showIcons(this.opponent, { x, y }, 'dot');
 			this.opponent.matrix[x][y] = 3;
 
 			// определяем статус игроков
 			if (this.player === human) {
-				Controller.showServiceText('Вы промахнулись. Стреляет компьютер.');
+				text = 'Вы промахнулись. Стреляет компьютер.';
 				this.player = computer;
 				this.opponent = human;
 				compShot = true;
+				// код для подготовки выстрела компьютера
+				// ...
 			} else {
-				Controller.showServiceText('Компьютер промахнулся. Ваш выстрел.');
+				text = 'Компьютер промахнулся. Ваш выстрел.';
 				this.player = human;
 				this.opponent = computer;
 				compShot = false;
 			}
+			Controller.showServiceText(text);
 		}
 	}
 
@@ -636,6 +639,7 @@
 		computer.cleanField();
 		computer.randomLocationShips();
 		startGame = true;
+		console.log(computer.matrix);
 
 		const battle = new Controller();
 		battle.init();
