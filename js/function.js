@@ -477,7 +477,9 @@
 			this.opponent = (this.player === human) ? computer : human;
 
 			if (this.player === human) {
-				computerfield.addEventListener('click', this.makeShot.bind(this));
+				// computerfield.addEventListener('click', this.makeShot.bind(this));
+				// test hit
+				computerfield.addEventListener('click', this.testhit.bind(this));
 				computerfield.addEventListener('contextmenu', this.setEmptyCell.bind(this));
 				this.text = 'Вы стреляете первым';
 			} else {
@@ -584,6 +586,23 @@
 			Controller.showServiceText(text);
 		}
 
+		testhit() {
+			let text = '';
+			this.opponent = human;
+			this.opponent.squadron.length = 0;
+			if (this.opponent === human) {
+				text = 'К сожалению, вы проиграли.';
+				// показываем оставшиеся корабли компьютера
+				for (let name in computer.squadron) {
+					const dataShip = computer.squadron[name];
+					Ships.showShip(computer, name, dataShip.x, dataShip.y, dataShip.kx );
+				}
+			} else {
+				text = 'Поздравляем! Вы выиграли!';
+			}
+			Controller.showServiceText(text);
+		}
+
 		hit({ x, y }) {
 			let text = '';
 			// устанавливаем иконку попадания и записываем попадание в матрицу
@@ -613,10 +632,10 @@
 
 			// все корабли эскадры уничтожены
 			if (this.opponent.squadron.length == 0) {
-				if (this.opponent === human) {
-					text = 'Поздравляем! Вы выиграли!'
+				if (this.opponent === computer) {
+					text = 'Поздравляем! Вы выиграли!';
 				} else {
-					text = 'К сожалению, вы проиграли.'
+					text = 'К сожалению, вы проиграли.';
 					// показываем оставшиеся корабли компьютера
 					for (let name in computer.squadron) {
 						const dataShip = computer.squadron[name];
@@ -686,7 +705,6 @@
 		computer.cleanField();
 		computer.randomLocationShips();
 		startGame = true;
-		console.log(computer.matrix);
 
 		const battle = new Controller();
 		battle.init();
