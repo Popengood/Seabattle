@@ -556,6 +556,7 @@
 					break;
 				case 3: // повторный обстрел
 				case 4:
+				Controller.showServiceText('По этим координатам вы уже стреляли!');
 					break;
 			}
 		}
