@@ -449,12 +449,26 @@
 	}
 
 	class Controller {
+		// массив базовых координат для формирования shotCoordsFixed
+		static START_POINTS = [
+			[ [6,0], [2,0], [0,2], [0,6] ],
+			[ [3,0], [7,0], [9,2], [9,6] ]
+		];
 		static SERVICE_TEXT = getElement('service_text');
 
 		constructor() {
 			this.player = '';
 			this.opponent = '';
 			this.text = '';
+			// массив с координатами выстрелов при рандомном выборе
+			this.shotCoordsRandom = [];
+			// массив с заранее вычисленными координатами выстрелов
+			this.shotCoordsFixed = [];
+			// массив с координатами вокруг клетки с попаданием
+			this.shootCoordsAroundHit = [];
+			// временный объект корабля, куда будем заносить координаты
+			// попаданий, расположение корабля, количество попаданий
+			this.tempShip = {};
 		}
 
 		static showServiceText = text => {
@@ -471,8 +485,11 @@
 		}
 
 		init() {
-			// Рандомно выбираем игрока и его противника для первого выстрела
-			const random = Field.getRandom(0); // заменить 0 на 1 !!!!!!!
+			// Рандомно выбираем игрока и его противника
+			// const random = Field.getRandom(1);
+			// test row
+			const random = 1;
+			
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
 
@@ -482,6 +499,14 @@
 				this.text = 'Вы стреляете первым';
 			} else {
 				this.text = 'Первым стреляет компьютер';
+				// создаём временный объект корабля 'tempShip' куда будем заносить
+				// координаты попаданий, расположение корабля, количество попаданий
+				this.resetTempShip();
+				// генерируем координаты выстрелов компьютера и заносим их в
+				// массивы shotCoordsRandom и shotCoordsFixed
+				this.setShotMatrix();
+
+				setTimeout(() => this.makeShot(), 3000);
 			}
 			Controller.showServiceText(this.text);
 		}
@@ -539,7 +564,7 @@
 				({ x, y } = this.transformCoordinatesInMatrix(e, this.opponent));
 			} else {
 				// получаем координаты для выстрела компьютера
-				// ...
+				
 			}
 
 			// проверяем наличие иконки 'shaded-cell' по полученым координатам
