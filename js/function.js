@@ -15,12 +15,12 @@
 	const getElement = id => document.getElementById(id);
 	const getCoordinates = el => {
 		// координаты всех сторон элемента относительно окна браузера
-		const coord = el.getBoundingClientRect();
+		const coords = el.getBoundingClientRect();
 		return {
-			left: coord.left + window.pageXOffset,
-			right: coord.right + window.pageXOffset,
-			top: coord.top + window.pageYOffset,
-			bottom: coord.bottom + window.pageYOffset
+			left: coords.left + window.pageXOffset,
+			right: coords.right + window.pageXOffset,
+			top: coords.top + window.pageYOffset,
+			bottom: coords.bottom + window.pageYOffset
 		};
 	}
 
@@ -70,7 +70,7 @@
 				// прокручиваем кол-во кораблей
 				for (let i = 0; i < count; i++) {
 					// получаем координаты первой палубы и направление расположения палуб (корабля)
-					let options = this.getCoordinatesDecks(decks);
+					let options = this.getCoordsDecks(decks);
 					options.decks = decks;
 					options.shipname = type + String(i + 1);
 
@@ -80,7 +80,7 @@
 			}
 		}
 
-		getCoordinatesDecks(decks) {
+		getCoordsDecks(decks) {
 			let kx = Field.getRandom(1), ky = (kx == 0) ? 1 : 0,
 				x, y;
 
@@ -92,7 +92,7 @@
 
 			const obj = {x, y, kx, ky}
 			const result = this.checkLocationShip(obj, decks);
-			if (!result) return this.getCoordinatesDecks(decks);
+			if (!result) return this.getCoordsDecks(decks);
 			return obj;
 		}
 
@@ -277,10 +277,10 @@
 			// проверяем, что клон находится в пределах игрового поля, с учётом
 			// небольших погрешностей (14px )
 			if (left >= this.fieldLeft - 14 && right <= this.fieldRight + 14 && top >= this.fieldTop - 14 && bottom <= this.fieldBottom + 14) {
-				const coordinates = this.getCoordinatesCloneInMatrix({left, right, top, bottom});
+				const coords = this.getCoordsCloneInMatrix({left, right, top, bottom});
 				const obj = {
-					x: coordinates.x,
-					y: coordinates.y,
+					x: coords.x,
+					y: coords.y,
 					kx: this.dragObject.kx,
 					ky: this.dragObject.ky
 				};
@@ -361,7 +361,7 @@
 			}
 		}
 
-		creatClone(coord) {
+		creatClone(coords) {
 			const clone = this.dragObject.el;
 			const oldPosition = this.dragObject;
 
@@ -387,8 +387,8 @@
 
 		createShipAfterEditing() {
 			// получаем координаты, пересчитанные относительно игрового поля
-			const coord = getCoordinates(this.clone);
-			let { left, top, x, y } = this.getCoordinatesCloneInMatrix(coord);
+			const coords = getCoordinates(this.clone);
+			let { left, top, x, y } = this.getCoordsCloneInMatrix(coords);
 			this.clone.style.left = `${left}px`;
 			this.clone.style.top = `${top}px`;
 			// переносим клон внутрь игрового поля
@@ -412,7 +412,7 @@
 			this.field.removeChild(this.clone);
 		}
 
-		getCoordinatesCloneInMatrix({left, right, top, bottom} = coord) {
+		getCoordsCloneInMatrix({left, right, top, bottom} = coords) {
 			let computedLeft = left - this.fieldLeft,
 				computedRight = right - this.fieldLeft,
 				computedTop = top - this.fieldTop,
@@ -439,8 +439,8 @@
 			if (!human.squadron[name]) return;
 
 			const arr = human.squadron[name].arrDecks;
-			for (let coord of arr) {
-				const [x, y] = coord;
+			for (let coords of arr) {
+				const [x, y] = coords;
 				human.matrix[x][y] = 0;
 			}
 			delete human.squadron[name];
@@ -482,7 +482,7 @@
 			tm = setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
 		}
 
-		static getCoordinatesIcon(el) {
+		static getCoorsIcon(el) {
 			const obj = {};
 			obj.x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
 			obj.y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
@@ -553,10 +553,10 @@
 			e.preventDefault();
 			if (e !== undefined && e.which != 3 || compShot) return;
 
-			const coord = this.transformCoordsInMatrix(e, computer);
-			const check = this.checkShadedCell(coord);
+			const coords = this.transformCoordsInMatrix(e, computer);
+			const check = this.checkShadedCell(coords);
 			if (check) {
-				this.showIcons(this.opponent, coord, 'shaded-cell');
+				this.showIcons(this.opponent, coords, 'shaded-cell');
 			} 
 		}
 
@@ -567,13 +567,13 @@
 			return obj;
 		}
 
-		checkShadedCell(coord) {
+		checkShadedCell(coords) {
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
-				const { x, y } = Controller.getCoordinatesIcon(icon);
-				if (coord.x == x && coord.y == y && icon.classList.contains('shaded-cell')) {
+				const { x, y } = Controller.getCoorsIcon(icon);
+				if (coords.x == x && coords.y == y && icon.classList.contains('shaded-cell')) {
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setEmptyCell') {
 						icon.parentElement.removeChild(icon);
@@ -588,10 +588,10 @@
 			return true;
 		}
 
-		showIcons(opponent, coord, iconClass) {
+		showIcons(opponent, coords, iconClass) {
 			const span = document.createElement('span');
 			span.className = `icon-field ${iconClass}`;
-			span.style.cssText = `left:${coord.y * Field.SHIP_SIDE}px; top:${coord.x * Field.SHIP_SIDE}px;`;
+			span.style.cssText = `left:${coords.y * Field.SHIP_SIDE}px; top:${coords.x * Field.SHIP_SIDE}px;`;
 			opponent.field.appendChild(span);
 		}
 
@@ -625,15 +625,15 @@
 		}
 
 		getCoordsForShot() {
-			const coord = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
+			const coords = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
 			
 			// удаляем полученные координаты из всех массивов
 			if (this.shotCoordsFixed.length > 0) {
-				Controller.removeElementArray(this.shotCoordsFixed, coord);
+				Controller.removeElementArray(this.shotCoordsFixed, coords);
 			}
-			Controller.removeElementArray(this.shotCoordsRandom, coord);
+			Controller.removeElementArray(this.shotCoordsRandom, coords);
 
-			return coord;
+			return coords;
 		}
 
 		miss({ x, y }) {
