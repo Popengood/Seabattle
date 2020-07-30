@@ -483,10 +483,9 @@
 		}
 
 		static getCoorsIcon(el) {
-			const obj = {};
-			obj.x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
-			obj.y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
-			return obj;
+			const x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
+			const y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
+			return [x, y];
 		}
 
 		static removeElementArray(arr, [x, y]) {
@@ -497,7 +496,8 @@
 		init() {
 			// Рандомно выбираем игрока и его противника
 			// const random = Field.getRandom(1);
-			// test row
+
+			// test row !!!!!
 			const random = 1;
 			
 			this.player = (random == 0) ? human : computer;
@@ -561,10 +561,9 @@
 		}
 
 		transformCoordsInMatrix(e, self) {
-			const obj = {};
-			obj.x = Math.trunc((e.pageY - self.fieldTop) / Field.SHIP_SIDE);
-			obj.y = Math.trunc((e.pageX - self.fieldLeft) / Field.SHIP_SIDE);
-			return obj;
+			const x = Math.trunc((e.pageY - self.fieldTop) / Field.SHIP_SIDE);
+			const y = Math.trunc((e.pageX - self.fieldLeft) / Field.SHIP_SIDE);
+			return [x, y];
 		}
 
 		checkShadedCell(coords) {
@@ -572,8 +571,8 @@
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
-				const { x, y } = Controller.getCoorsIcon(icon);
-				if (coords.x == x && coords.y == y && icon.classList.contains('shaded-cell')) {
+				const [x, y] = Controller.getCoorsIcon(icon);
+				if (coords[0] == x && coords[1] == y && icon.classList.contains('shaded-cell')) {
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setEmptyCell') {
 						icon.parentElement.removeChild(icon);
@@ -588,10 +587,10 @@
 			return true;
 		}
 
-		showIcons(opponent, coords, iconClass) {
+		showIcons(opponent, [x, y], iconClass) {
 			const span = document.createElement('span');
 			span.className = `icon-field ${iconClass}`;
-			span.style.cssText = `left:${coords.y * Field.SHIP_SIDE}px; top:${coords.x * Field.SHIP_SIDE}px;`;
+			span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
 			opponent.field.appendChild(span);
 		}
 
@@ -599,23 +598,23 @@
 			let x, y;
 			if (e !== undefined) {
 				if (e.which != 1 || compShot) return;
-				({ x, y } = this.transformCoordsInMatrix(e, this.opponent));
+				([x, y] = this.transformCoordsInMatrix(e, this.opponent));
 			} else {
 				// получаем координаты для выстрела компьютера
 				([x, y] = this.getCoordsForShot());
 			}
 
 			// проверяем наличие иконки 'shaded-cell' по полученым координатам
-			const check = this.checkShadedCell({ x, y });
+			const check = this.checkShadedCell([x, y]);
 			if (!check) return;
 
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
 				case 0: // промах
-					this.miss({ x, y });
+					this.miss(x, y);
 					break;
 				case 1: // попадание
-				this.hit({ x, y });
+				this.hit(x, y);
 					break;
 				case 3: // повторный обстрел
 				case 4:
@@ -636,10 +635,10 @@
 			return coords;
 		}
 
-		miss({ x, y }) {
+		miss(x, y) {
 			let text = '';
 			// устанавливаем иконку промаха и записываем промах в матрицу
-			this.showIcons(this.opponent, { x, y }, 'dot');
+			this.showIcons(this.opponent, [x, y], 'dot');
 			this.opponent.matrix[x][y] = 3;
 
 			// определяем статус игроков
@@ -659,10 +658,10 @@
 			Controller.showServiceText(text);
 		}
 
-		hit({ x, y }) {
+		hit(x, y) {
 			let text = '';
 			// устанавливаем иконку попадания и записываем попадание в матрицу
-			this.showIcons(this.opponent, { x, y }, 'red-cross');
+			this.showIcons(this.opponent, [x, y], 'red-cross');
 			this.opponent.matrix[x][y] = 4;
 			text = (this.player === human) ? 'Поздравляем! Вы попали. Ваш выстрел.' : 'Компьютер попал в ваш корабль. Выстрел компьютера';
 			Controller.showServiceText(text);
