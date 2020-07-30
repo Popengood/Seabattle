@@ -47,7 +47,7 @@
 		}
 
 		static createMatrix() {
-			const arr = Array(10).fill().map(() => Array(10).fill(0));
+			const arr = [...Array(10)].map(() => Array(10).fill(0));
 			return arr;
 		}
 		static getRandom = n => Math.floor(Math.random() * (n + 1));
@@ -167,8 +167,7 @@
 			let { player, field, shipname, decks, x, y, kx, ky, hits, arrDecks, k = 0 } = this;
 
 			while (k < decks) {
-				let i = x + k * kx,
-					j = y + k * ky;
+				let i = x + k * kx, j = y + k * ky;
 
 				player.matrix[i][j] = 1; // игровое поле
 				arrDecks.push([i, j]);
@@ -468,7 +467,13 @@
 			this.shootCoordsAroundHit = [];
 			// временный объект корабля, куда будем заносить координаты
 			// попаданий, расположение корабля, количество попаданий
-			this.tempShip = {};
+			this.tempShip = {
+				totalHits: 0,
+				firstHit: {},
+				nextHit: {},
+				kx: 0,
+				ky: 0
+			};
 		}
 
 		static showServiceText = text => {
@@ -482,6 +487,11 @@
 			obj.x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
 			obj.y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
 			return obj;
+		}
+
+		static removeElementArray(arr, [x, y]) {
+			const a = arr.filter(item => item[0] != x || item[1] != y);
+			return a;
 		}
 
 		init() {
@@ -499,30 +509,58 @@
 				this.text = 'Вы стреляете первым';
 			} else {
 				this.text = 'Первым стреляет компьютер';
-				// создаём временный объект корабля 'tempShip' куда будем заносить
-				// координаты попаданий, расположение корабля, количество попаданий
-				this.resetTempShip();
 				// генерируем координаты выстрелов компьютера и заносим их в
 				// массивы shotCoordsRandom и shotCoordsFixed
-				this.setShotMatrix();
-
+				this.setShotCoords();
 				setTimeout(() => this.makeShot(), 3000);
 			}
 			Controller.showServiceText(this.text);
+		}
+
+		setShotCoords() {
+			for (let i = 0; i < 10; i++) {
+				for(let j = 0; j < 10; j++) {
+					this.shotCoordsRandom.push([i, j]);
+				}
+			}
+			this.shotCoordsRandom.sort((a, b) => Math.random() - 0.5);
+
+			let x, y;
+
+			for (let arr of Controller.START_POINTS[0]) {
+				x = arr[0]; y = arr[1];
+				while (x <= 9 && y <= 9) {
+					this.shotCoordsFixed.push([x, y]);
+					x = (x <= 9) ? x : 9;
+					y = (y <= 9) ? y : 9;
+					x++; y++;
+				}
+			}
+
+			for (let arr of Controller.START_POINTS[1]) {
+				x = arr[0]; y = arr[1];
+				while(x >= 0 && x <= 9 && y <= 9) {
+					this.shotCoordsFixed.push([x, y]);
+					x = (x >= 0 && x <= 9) ? x : (x < 0) ? 0 : 9;
+					y = (y <= 9) ? y : 9;
+					x--; y++;
+				};
+			}
+			this.shotCoordsFixed = this.shotCoordsFixed.reverse();
 		}
 
 		setEmptyCell(e) {
 			e.preventDefault();
 			if (e !== undefined && e.which != 3 || compShot) return;
 
-			const coord = this.transformCoordinatesInMatrix(e, computer);
+			const coord = this.transformCoordsInMatrix(e, computer);
 			const check = this.checkShadedCell(coord);
 			if (check) {
 				this.showIcons(this.opponent, coord, 'shaded-cell');
 			} 
 		}
 
-		transformCoordinatesInMatrix(e, self) {
+		transformCoordsInMatrix(e, self) {
 			const obj = {};
 			obj.x = Math.trunc((e.pageY - self.fieldTop) / Field.SHIP_SIDE);
 			obj.y = Math.trunc((e.pageX - self.fieldLeft) / Field.SHIP_SIDE);
@@ -561,10 +599,10 @@
 			let x, y;
 			if (e !== undefined) {
 				if (e.which != 1 || compShot) return;
-				({ x, y } = this.transformCoordinatesInMatrix(e, this.opponent));
+				({ x, y } = this.transformCoordsInMatrix(e, this.opponent));
 			} else {
 				// получаем координаты для выстрела компьютера
-				
+				([x, y] = this.getCoordsForShot());
 			}
 
 			// проверяем наличие иконки 'shaded-cell' по полученым координатам
@@ -584,6 +622,18 @@
 				Controller.showServiceText('По этим координатам вы уже стреляли!');
 					break;
 			}
+		}
+
+		getCoordsForShot() {
+			const coord = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
+			
+			// удаляем полученные координаты из всех массивов
+			if (this.shotCoordsFixed.length > 0) {
+				Controller.removeElementArray(this.shotCoordsFixed, coord);
+			}
+			Controller.removeElementArray(this.shotCoordsRandom, coord);
+
+			return coord;
 		}
 
 		miss({ x, y }) {
