@@ -468,7 +468,7 @@
 			// временный объект корабля, куда будем заносить координаты
 			// попаданий, расположение корабля, количество попаданий
 			this.tempShip = {
-				totalHits: 0,
+				hits: 0,
 				firstHit: {},
 				nextHit: {},
 				kx: 0,
@@ -676,7 +676,8 @@
 						if (dataShip.hits == dataShip.arrDecks.length) {
 							if (this.opponent === computer) {
 								// код компьютера: сохраняем координаты первой палубы
-								// ...
+								this.tempShip.x = dataShip.x;
+								this.tempShip.y = dataShip.y;
 							}
 							delete this.opponent.squadron[name];
 						}
@@ -698,8 +699,16 @@
 					text = 'Поздравляем! Вы выиграли!';
 				}
 				Controller.showServiceText(text);
-				// reset массивов и флагов для для начала новой игры
-				// ...
+			// бой продолжается
+			} else if (this.opponent === computer) {
+				this.tempShip.hits++;
+				// отмечаем клетки по диагонали, где точно не может стоять корабль
+				const points = [
+					[x - 1, y - 1],
+					[x - 1, y + 1],
+					[x + 1, y - 1],
+					[x + 1, y + 1]
+				];
 			}
 		}
 	}
