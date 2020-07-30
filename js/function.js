@@ -152,7 +152,7 @@
 				  classname = shipname.slice(0, -1);
 
 			// устанавливаем уникальный идентификатор для корабля
-			div.setAttribute('id', this.shipname);
+			div.setAttribute('id', shipname);
 			// собираем в одну строку все классы 
 			div.className = `ship ${classname}${dir}`;
 			// через атрибут 'style' задаём позиционирование кораблю относительно
