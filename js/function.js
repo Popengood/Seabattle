@@ -505,7 +505,7 @@
 
 			if (this.player === human) {
 				computerfield.addEventListener('click', this.makeShot.bind(this));
-				computerfield.addEventListener('contextmenu', this.setEmptyCell.bind(this));
+				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
 				this.text = 'Вы стреляете первым';
 			} else {
 				this.text = 'Первым стреляет компьютер';
@@ -549,12 +549,12 @@
 			this.shotCoordsFixed = this.shotCoordsFixed.reverse();
 		}
 
-		setEmptyCell(e) {
+		setUselessCell(e) {
 			e.preventDefault();
 			if (e !== undefined && e.which != 3 || compShot) return;
 
 			const coords = this.transformCoordsInMatrix(e, computer);
-			const check = this.checkShadedCell(coords);
+			const check = this.checkUselessCell(coords);
 			if (check) {
 				this.showIcons(this.opponent, coords, 'shaded-cell');
 			} 
@@ -566,7 +566,17 @@
 			return [x, y];
 		}
 
-		checkShadedCell(coords) {
+		removeCoordsFromArrays(coords) {
+			if (this.shootCoordsAroundHit.length > 0) {
+				Controller.removeElementArray(this.shootCoordsAroundHit, coords);
+			}
+			if (this.shotCoordsFixed.length > 0) {
+				Controller.removeElementArray(this.shotCoordsFixed, coords);
+			}
+			Controller.removeElementArray(this.shotCoordsRandom, coords);
+		}
+
+		checkUselessCell(coords) {
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
@@ -574,7 +584,7 @@
 				const [x, y] = Controller.getCoorsIcon(icon);
 				if (coords[0] == x && coords[1] == y && icon.classList.contains('shaded-cell')) {
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
-					if (f == 'Controller.setEmptyCell') {
+					if (f == 'Controller.setUselessCell') {
 						icon.parentElement.removeChild(icon);
 					} else {
 						Controller.showServiceText('Уберите маркер клетки игрового поля');
@@ -587,11 +597,62 @@
 			return true;
 		}
 
+		markUselessCell(coords) {
+			let x, y;
+			for (let coord of coords) {
+				x = coord[0]; y = coord[1];
+				// за пределами игрового поля
+				if (x < 0 || x > 9 || y < 0 || y > 9) continue;
+				// что-то уже есть
+				if (human.matrix[x][y] != 0) continue;
+				human.matrix[x][y] = 2;
+				this.showIcons(human, coord, 'shaded-cell');
+				// удаляем полученные координаты из всех массивов
+				this.removeCoordsFromArrays(coord);
+			}
+		}
+
+		markUselessCellAroundShip(coords){
+			const {hits, kx, ky, x0, y0} = this.tempShip;
+			let points;
+
+			// однопалубный корабль
+			if (this.tempShip.hits == 1) {
+				points = [
+					// верхняя
+					[x0 - 1, y0],
+					// нижняя
+					[x0 + 1, y0],
+					// левая
+					[x0, y0 - 1],
+					// правая
+					[x0, y0 + 1]
+				];
+			// многопалубный корабль
+			} else {
+				points = [
+					// левая / верхняя
+					[x0 - kx, y0 - ky],
+					// правая / нижняя
+					[x0 + kx * hits, y0 + ky * hits]
+				];
+			}
+			this.markUselessCell(points);
+		}
+
 		showIcons(opponent, [x, y], iconClass) {
 			const span = document.createElement('span');
 			span.className = `icon-field ${iconClass}`;
 			span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
-			opponent.field.appendChild(span);
+			setTimeout(() => { opponent.field.appendChild(span) }, 500);
+		}
+
+		getCoordsForShot() {
+			const coords = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
+			
+			// удаляем полученные координаты из всех массивов
+			this.removeCoordsFromArrays(coords);
+			return coords;
 		}
 
 		makeShot(e) {
@@ -605,7 +666,7 @@
 			}
 
 			// проверяем наличие иконки 'shaded-cell' по полученым координатам
-			const check = this.checkShadedCell([x, y]);
+			const check = this.checkUselessCell([x, y]);
 			if (!check) return;
 
 			const v	= this.opponent.matrix[x][y];
@@ -621,18 +682,6 @@
 				Controller.showServiceText('По этим координатам вы уже стреляли!');
 					break;
 			}
-		}
-
-		getCoordsForShot() {
-			const coords = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
-			
-			// удаляем полученные координаты из всех массивов
-			if (this.shotCoordsFixed.length > 0) {
-				Controller.removeElementArray(this.shotCoordsFixed, coords);
-			}
-			Controller.removeElementArray(this.shotCoordsRandom, coords);
-
-			return coords;
 		}
 
 		miss(x, y) {
@@ -674,14 +723,14 @@
 					if (value[0] == x && value[1] == y) {
 						dataShip.hits++;
 						if (dataShip.hits == dataShip.arrDecks.length) {
-							if (this.opponent === computer) {
+							if (this.opponent === human) {
 								// код компьютера: сохраняем координаты первой палубы
-								this.tempShip.x = dataShip.x;
-								this.tempShip.y = dataShip.y;
+								this.tempShip.x0 = dataShip.x;
+								this.tempShip.y0 = dataShip.y;
 							}
 							delete this.opponent.squadron[name];
 						}
-						return;
+						// break;
 					}
 				}
 			}
@@ -700,15 +749,27 @@
 				}
 				Controller.showServiceText(text);
 			// бой продолжается
-			} else if (this.opponent === computer) {
+			} else if (this.opponent === human) {
 				this.tempShip.hits++;
 				// отмечаем клетки по диагонали, где точно не может стоять корабль
-				const points = [
+				const coords = [
 					[x - 1, y - 1],
 					[x - 1, y + 1],
 					[x + 1, y - 1],
 					[x + 1, y + 1]
 				];
+				this.markUselessCell(coords);
+
+				// max кол-во палуб у оставшихся кораблей
+				let obj = Object.values(human.squadron)
+					.reduce((a, b) => a.arrDecks.length > b.arrDecks.length ? a : b);
+				// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
+				if (this.tempShip.hits >= obj.arrDecks.length) {
+					// корабль потоплен, отмечаем useless cell вокруг него
+					this.markUselessCellAroundShip(coords);
+				} else {
+					// формируем координаты обстрела вокруг попадания
+				}
 			}
 		}
 	}
