@@ -467,13 +467,7 @@
 			this.shootCoordsAroundHit = [];
 			// временный объект корабля, куда будем заносить координаты
 			// попаданий, расположение корабля, количество попаданий
-			this.tempShip = {
-				hits: 0,
-				firstHit: {},
-				nextHit: {},
-				kx: 0,
-				ky: 0
-			};
+			this.resetTempShip();
 		}
 
 		static showServiceText = text => {
@@ -512,7 +506,7 @@
 				// генерируем координаты выстрелов компьютера и заносим их в
 				// массивы shotCoordsRandom и shotCoordsFixed
 				this.setShotCoords();
-				setTimeout(() => this.makeShot(), 3000);
+				setTimeout(() => this.makeShot(), 1000); // !!! поставить 2000
 			}
 			Controller.showServiceText(this.text);
 		}
@@ -598,15 +592,16 @@
 		}
 
 		markUselessCell(coords) {
-			let x, y;
+			let n = 0, x, y, tm;
 			for (let coord of coords) {
 				x = coord[0]; y = coord[1];
+				n++;
 				// за пределами игрового поля
 				if (x < 0 || x > 9 || y < 0 || y > 9) continue;
 				// что-то уже есть
 				if (human.matrix[x][y] != 0) continue;
 				human.matrix[x][y] = 2;
-				this.showIcons(human, coord, 'shaded-cell');
+				setTimeout(() => this.showIcons(human, coord, 'shaded-cell'), 100 * n);
 				// удаляем полученные координаты из всех массивов
 				this.removeCoordsFromArrays(coord);
 			}
@@ -644,7 +639,7 @@
 			const span = document.createElement('span');
 			span.className = `icon-field ${iconClass}`;
 			span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
-			setTimeout(() => { opponent.field.appendChild(span) }, 500);
+			opponent.field.appendChild(span);
 		}
 
 		getCoordsForShot() {
@@ -653,6 +648,16 @@
 			// удаляем полученные координаты из всех массивов
 			this.removeCoordsFromArrays(coords);
 			return coords;
+		}
+
+		resetTempShip() {
+			this.tempShip = {
+				hits: 0,
+				firstHit: [],
+				nextHit: [],
+				kx: 0,
+				ky: 0
+			};
 		}
 
 		makeShot(e) {
@@ -764,9 +769,11 @@
 				let obj = Object.values(human.squadron)
 					.reduce((a, b) => a.arrDecks.length > b.arrDecks.length ? a : b);
 				// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
-				if (this.tempShip.hits >= obj.arrDecks.length) {
+				if (this.tempShip.hits < obj.arrDecks.length) {
 					// корабль потоплен, отмечаем useless cell вокруг него
 					this.markUselessCellAroundShip(coords);
+					this.shootCoordsAroundHit = [];
+					this.resetTempShip();
 				} else {
 					// формируем координаты обстрела вокруг попадания
 				}
