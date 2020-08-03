@@ -447,8 +447,10 @@
 		}
 	}
 
+	///////////////////////////////////////////
+
 	class Controller {
-		// массив базовых координат для формирования shotCoordsFixed
+		// массив базовых координат для формирования coordsFixed
 		static START_POINTS = [
 			[ [6,0], [2,0], [0,2], [0,6] ],
 			[ [3,0], [7,0], [9,2], [9,6] ]
@@ -460,11 +462,11 @@
 			this.opponent = '';
 			this.text = '';
 			// массив с координатами выстрелов при рандомном выборе
-			this.shotCoordsRandom = [];
+			this.coordsRandom = [];
 			// массив с заранее вычисленными координатами выстрелов
-			this.shotCoordsFixed = [];
+			this.coordsFixed = [];
 			// массив с координатами вокруг клетки с попаданием
-			this.shootCoordsAroundHit = [];
+			this.coordsAroundHit = [];
 			// временный объект корабля, куда будем заносить координаты
 			// попаданий, расположение корабля, количество попаданий
 			this.resetTempShip();
@@ -472,19 +474,17 @@
 
 		static showServiceText = text => {
 			Controller.SERVICE_TEXT.innerHTML = text;
-			let tm = 0;
-			tm = setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
+			// setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
 		}
 
-		static getCoorsIcon(el) {
+		static getCoordsIcon(el) {
 			const x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
 			const y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
 			return [x, y];
 		}
 
 		static removeElementArray(arr, [x, y]) {
-			const a = arr.filter(item => item[0] != x || item[1] != y);
-			return a;
+			return arr.filter(item => item[0] != x || item[1] != y);
 		}
 
 		init() {
@@ -497,34 +497,38 @@
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
 
+			// генерируем координаты выстрелов компьютера и заносим их в
+			// массивы coordsRandom и coordsFixed
+			this.setCoordsShot();
+			// обработчики события для игрока
+			computerfield.addEventListener('click', this.makeShot.bind(this));
+			computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
+
 			if (this.player === human) {
-				computerfield.addEventListener('click', this.makeShot.bind(this));
-				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
+				compShot = false;
 				this.text = 'Вы стреляете первым';
 			} else {
+				compShot = true;
 				this.text = 'Первым стреляет компьютер';
-				// генерируем координаты выстрелов компьютера и заносим их в
-				// массивы shotCoordsRandom и shotCoordsFixed
-				this.setShotCoords();
-				setTimeout(() => this.makeShot(), 1000); // !!! поставить 2000
+				setTimeout(() => this.makeShot(), 2000);
 			}
 			Controller.showServiceText(this.text);
 		}
 
-		setShotCoords() {
+		setCoordsShot() {
 			for (let i = 0; i < 10; i++) {
 				for(let j = 0; j < 10; j++) {
-					this.shotCoordsRandom.push([i, j]);
+					this.coordsRandom.push([i, j]);
 				}
 			}
-			this.shotCoordsRandom.sort((a, b) => Math.random() - 0.5);
+			this.coordsRandom.sort((a, b) => Math.random() - 0.5);
 
 			let x, y;
 
 			for (let arr of Controller.START_POINTS[0]) {
 				x = arr[0]; y = arr[1];
 				while (x <= 9 && y <= 9) {
-					this.shotCoordsFixed.push([x, y]);
+					this.coordsFixed.push([x, y]);
 					x = (x <= 9) ? x : 9;
 					y = (y <= 9) ? y : 9;
 					x++; y++;
@@ -534,13 +538,36 @@
 			for (let arr of Controller.START_POINTS[1]) {
 				x = arr[0]; y = arr[1];
 				while(x >= 0 && x <= 9 && y <= 9) {
-					this.shotCoordsFixed.push([x, y]);
+					this.coordsFixed.push([x, y]);
 					x = (x >= 0 && x <= 9) ? x : (x < 0) ? 0 : 9;
 					y = (y <= 9) ? y : 9;
 					x--; y++;
 				};
 			}
-			this.shotCoordsFixed = this.shotCoordsFixed.reverse();
+			this.coordsFixed = this.coordsFixed.reverse();
+		}
+
+		setCoordsAroundHit(x, y) {
+			let {firstHit, kx, ky} = this.tempShip;
+			let arr = [];
+
+			if (firstHit.length == 0) {
+				this.tempShip.firstHit = [x, y];
+			} else if (kx == 0 && ky == 0) {
+				this.tempShip.kx = (Math.abs(firstHit[0] - x) == 1) ? 1 : 0;
+				this.tempShip.ky = (Math.abs(firstHit[1] - y) == 1) ? 1: 0;
+			}
+
+			// вертикальное расположение
+			if (x > 0) this.coordsAroundHit.push([x - 1, y]);
+			if (x < 9) this.coordsAroundHit.push([x + 1, y]);
+			// горизонтальное расположение
+			if (y > 0) this.coordsAroundHit.push([x, y - 1]);
+			if (y < 9) this.coordsAroundHit.push([x, y + 1]);
+
+			// валидация координат с помощью фильтра
+			arr = this.coordsAroundHit.filter(([x, y]) => human.matrix[x][y] == 0 || human.matrix[x][y] == 1);
+			this.coordsAroundHit = [...arr];
 		}
 
 		setUselessCell(e) {
@@ -561,13 +588,13 @@
 		}
 
 		removeCoordsFromArrays(coords) {
-			if (this.shootCoordsAroundHit.length > 0) {
-				Controller.removeElementArray(this.shootCoordsAroundHit, coords);
+			if (this.coordsAroundHit.length > 0) {
+				this.coordsAroundHit = Controller.removeElementArray(this.coordsAroundHit, coords);
 			}
-			if (this.shotCoordsFixed.length > 0) {
-				Controller.removeElementArray(this.shotCoordsFixed, coords);
+			if (this.coordsFixed.length > 0) {
+				this.coordsFixed = Controller.removeElementArray(this.coordsFixed, coords);
 			}
-			Controller.removeElementArray(this.shotCoordsRandom, coords);
+			this.coordsRandom = Controller.removeElementArray(this.coordsRandom, coords);
 		}
 
 		checkUselessCell(coords) {
@@ -575,7 +602,7 @@
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
-				const [x, y] = Controller.getCoorsIcon(icon);
+				const [x, y] = Controller.getCoordsIcon(icon);
 				if (coords[0] == x && coords[1] == y && icon.classList.contains('shaded-cell')) {
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setUselessCell') {
@@ -592,15 +619,15 @@
 		}
 
 		markUselessCell(coords) {
-			let n = 0, x, y, tm;
+			let n = 0, x, y;
 			for (let coord of coords) {
 				x = coord[0]; y = coord[1];
-				n++;
 				// за пределами игрового поля
 				if (x < 0 || x > 9 || y < 0 || y > 9) continue;
 				// что-то уже есть
 				if (human.matrix[x][y] != 0) continue;
 				human.matrix[x][y] = 2;
+				n++;
 				setTimeout(() => this.showIcons(human, coord, 'shaded-cell'), 100 * n);
 				// удаляем полученные координаты из всех массивов
 				this.removeCoordsFromArrays(coord);
@@ -643,7 +670,7 @@
 		}
 
 		getCoordsForShot() {
-			const coords = (this.shootCoordsAroundHit.length > 0) ? this.shootCoordsAroundHit.pop() : (this.shotCoordsFixed.length > 0) ? this.shotCoordsFixed.pop() : this.shotCoordsRandom.pop();
+			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixed.length > 0) ? this.coordsFixed.pop() : this.coordsRandom.pop();
 			
 			// удаляем полученные координаты из всех массивов
 			this.removeCoordsFromArrays(coords);
@@ -654,7 +681,6 @@
 			this.tempShip = {
 				hits: 0,
 				firstHit: [],
-				nextHit: [],
 				kx: 0,
 				ky: 0
 			};
@@ -674,17 +700,23 @@
 			const check = this.checkUselessCell([x, y]);
 			if (!check) return;
 
+			// показываем и удаляем иконку выстрела
+			this.showIcons(this.opponent, [x, y], 'explosion');
+			const explosion = this.opponent.field.querySelector('.explosion');
+			setTimeout(() => explosion.parentElement.removeChild(explosion), 300);
+
+
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
 				case 0: // промах
 					this.miss(x, y);
 					break;
 				case 1: // попадание
-				this.hit(x, y);
+					this.hit(x, y);
 					break;
 				case 3: // повторный обстрел
 				case 4:
-				Controller.showServiceText('По этим координатам вы уже стреляли!');
+					Controller.showServiceText('По этим координатам вы уже стреляли!');
 					break;
 			}
 		}
@@ -701,10 +733,16 @@
 				this.player = computer;
 				this.opponent = human;
 				compShot = true;
-				// код для подготовки выстрела компьютера
-				// ...
+				setTimeout(() => this.makeShot(), 2000);
 			} else {
 				text = 'Компьютер промахнулся. Ваш выстрел.';
+
+				// обстреляны все возможные клетки для данного корабля
+				if (this.coordsAroundHit.length == 0 && this.tempShip.hits > 0) {
+					// корабль потоплен, отмечаем useless cell вокруг него
+					this.markUselessCellAroundShip([x, y]);
+					this.resetTempShip();
+				}
 				this.player = human;
 				this.opponent = computer;
 				compShot = false;
@@ -734,6 +772,9 @@
 								this.tempShip.y0 = dataShip.y;
 							}
 							delete this.opponent.squadron[name];
+							if (this.opponent === computer) {
+								console.log(computer.squadron);
+							}
 						}
 						// break;
 					}
@@ -741,7 +782,7 @@
 			}
 
 			// все корабли эскадры уничтожены
-			if (this.opponent.squadron.length == 0) {
+			if (Object.keys(this.opponent.squadron).length == 0) {
 				if (this.opponent === human) {
 					text = 'К сожалению, вы проиграли.';
 					// показываем оставшиеся корабли компьютера
@@ -765,18 +806,20 @@
 				];
 				this.markUselessCell(coords);
 
+				// формируем координаты обстрела вокруг попадания
+				this.setCoordsAroundHit(x, y);
+
 				// max кол-во палуб у оставшихся кораблей
 				let obj = Object.values(human.squadron)
 					.reduce((a, b) => a.arrDecks.length > b.arrDecks.length ? a : b);
 				// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
-				if (this.tempShip.hits < obj.arrDecks.length) {
+				if (this.tempShip.hits >= obj.arrDecks.length || this.coordsAroundHit.length == 0) {
 					// корабль потоплен, отмечаем useless cell вокруг него
 					this.markUselessCellAroundShip(coords);
-					this.shootCoordsAroundHit = [];
+					this.coordsAroundHit = [];
 					this.resetTempShip();
-				} else {
-					// формируем координаты обстрела вокруг попадания
 				}
+				setTimeout(() => this.makeShot(), 2000);
 			}
 		}
 	}
