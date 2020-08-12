@@ -70,4 +70,5 @@ p {margin-bottom: 10px;}
 .red-cross {background-position: -410px -50px;}
 .shaded-cell {background-position: -410px -100px;}
 .shaded-cell_red {background-position: -410px -140px;}
-.explosion { background-position: -150px -150px; z-index: 6; }
+.explosion { background-position: -150px -150px; z-index: 6; opacity: 0; transition: opacity .2s linear; }
+.explosion.active { opacity: 1; }

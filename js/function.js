@@ -597,7 +597,7 @@
 			this.coordsRandom = Controller.removeElementArray(this.coordsRandom, coords);
 		}
 
-		checkUselessCell(coords) {
+		checkUselessCell (coords) {
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
@@ -628,7 +628,7 @@
 				if (human.matrix[x][y] != 0) continue;
 				human.matrix[x][y] = 2;
 				n++;
-				setTimeout(() => this.showIcons(human, coord, 'shaded-cell'), 100 * n);
+				setTimeout(() => this.showIcons(human, coord, 'shaded-cell'), 350 * n);
 				// удаляем полученные координаты из всех массивов
 				this.removeCoordsFromArrays(coord);
 			}
@@ -663,10 +663,18 @@
 		}
 
 		showIcons(opponent, [x, y], iconClass) {
-			const span = document.createElement('span');
-			span.className = `icon-field ${iconClass}`;
-			span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
-			opponent.field.appendChild(span);
+			const field = opponent.field;
+			if (iconClass === 'dot' || iconClass === 'red-cross') {
+				setTimeout(() => fn(), 400);
+			} else {
+				fn();
+			}
+			function fn() {
+				const span = document.createElement('span');
+				span.className = `icon-field ${iconClass}`;
+				span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
+				field.appendChild(span);
+			}
 		}
 
 		getCoordsForShot() {
@@ -703,6 +711,8 @@
 			// показываем и удаляем иконку выстрела
 			this.showIcons(this.opponent, [x, y], 'explosion');
 			const explosion = this.opponent.field.querySelector('.explosion');
+			setTimeout(() => explosion.classList.add('active'), 0);
+			setTimeout(() => explosion.classList.remove('active'), 250);
 			setTimeout(() => explosion.parentElement.removeChild(explosion), 300);
 
 
@@ -772,9 +782,6 @@
 								this.tempShip.y0 = dataShip.y;
 							}
 							delete this.opponent.squadron[name];
-							if (this.opponent === computer) {
-								console.log(computer.squadron);
-							}
 						}
 						// break;
 					}
