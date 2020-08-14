@@ -759,7 +759,7 @@
 				this.opponent = computer;
 				compShot = false;
 			}
-			Controller.showServiceText(text);
+			setTimeout(() => Controller.showServiceText(text), 400);
 		}
 
 		hit(x, y) {
@@ -768,7 +768,7 @@
 			this.showIcons(this.opponent, [x, y], 'red-cross');
 			this.opponent.matrix[x][y] = 4;
 			text = (this.player === human) ? 'Поздравляем! Вы попали. Ваш выстрел.' : 'Компьютер попал в ваш корабль. Выстрел компьютера';
-			Controller.showServiceText(text);
+			setTimeout(() => Controller.showServiceText(text), 400);
 
 			// увеличиваем счётчик попаданий
 			// если счётчик === количеству палуб, удаляем корабль из эскадры
