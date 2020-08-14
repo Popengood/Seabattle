@@ -598,6 +598,8 @@
 		}
 
 		checkUselessCell (coords) {
+			if (computer.matrix[coords[0]][coords[1]] > 1) return false;
+
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
@@ -608,7 +610,7 @@
 					if (f == 'Controller.setUselessCell') {
 						icon.parentElement.removeChild(icon);
 					} else {
-						Controller.showServiceText('Уберите маркер клетки игрового поля');
+						// окрашиваем иконку в красный цвет
 						icon.classList.add('shaded-cell_red');
 						setTimeout(() => { icon.classList.remove('shaded-cell_red') }, 500);
 					}
@@ -699,14 +701,14 @@
 			if (e !== undefined) {
 				if (e.which != 1 || compShot) return;
 				([x, y] = this.transformCoordsInMatrix(e, this.opponent));
+
+				// проверяем наличие иконки 'shaded-cell' по полученым координатам
+				const check = this.checkUselessCell([x, y]);
+				if (!check) return;
 			} else {
 				// получаем координаты для выстрела компьютера
 				([x, y] = this.getCoordsForShot());
 			}
-
-			// проверяем наличие иконки 'shaded-cell' по полученым координатам
-			const check = this.checkUselessCell([x, y]);
-			if (!check) return;
 
 			// показываем и удаляем иконку выстрела
 			this.showIcons(this.opponent, [x, y], 'explosion');
