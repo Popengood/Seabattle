@@ -17,6 +17,7 @@ p {margin-bottom: 10px;}
 
 /* buttons */
 .btn-play {width: 144px; height: 45px; display: block; font-size: 24px; line-height: 40px; text-align: center; margin: 0 auto; background-position: 0 -150px; cursor: pointer;}
+.btn-newgame { font-size: 19px; }
 
 /* display */
 .flex { display: flex; }

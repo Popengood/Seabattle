@@ -9,7 +9,8 @@
 	*/
 
 	let startGame = false;
-	let isHandler = false;
+	let isHandlerPlacement = false;
+	let isHandlerController = false;
 	let compShot = false;
 
 	const getElement = id => document.getElementById(id);
@@ -53,9 +54,8 @@
 		static getRandom = n => Math.floor(Math.random() * (n + 1));
 
 		cleanField() {
-			const divs = this.field.querySelectorAll('div');
-			for (let div of divs) {
-				div.remove();
+			while (this.field.firstChild) {
+				this.field.removeChild(this.field.firstChild);
 			}
 			this.squadron = {};
 			this.matrix = Field.createMatrix();
@@ -207,12 +207,12 @@
 		}
 
 		setObserver() {
-			if (isHandler) return;
+			if (isHandlerPlacement) return;
 			document.addEventListener('mousedown', this.onMouseDown.bind(this));
 			this.field.addEventListener('contextmenu', this.rotationShip.bind(this));
 			document.addEventListener('mousemove', this.onMouseMove.bind(this));
 			document.addEventListener('mouseup', this.onMouseUp.bind(this));
-			isHandler = true;
+			isHandlerPlacement = true;
 		}
 
 		onMouseDown(e) {
@@ -474,7 +474,6 @@
 
 		static showServiceText = text => {
 			Controller.SERVICE_TEXT.innerHTML = text;
-			// setTimeout(() => { Controller.SERVICE_TEXT.innerHTML = '' }, 2500);
 		}
 
 		static getCoordsIcon(el) {
@@ -489,10 +488,10 @@
 
 		init() {
 			// Рандомно выбираем игрока и его противника
-			// const random = Field.getRandom(1);
+			const random = Field.getRandom(1);
 
 			// test row !!!!!
-			const random = 1;
+			// const random = 1;
 			
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
@@ -500,9 +499,13 @@
 			// генерируем координаты выстрелов компьютера и заносим их в
 			// массивы coordsRandom и coordsFixed
 			this.setCoordsShot();
+
 			// обработчики события для игрока
-			computerfield.addEventListener('click', this.makeShot.bind(this));
-			computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
+			if (isHandlerController === false) {
+				computerfield.addEventListener('click', this.makeShot.bind(this));
+				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
+				isHandlerController = true;
+			}
 
 			if (this.player === human) {
 				compShot = false;
@@ -785,7 +788,6 @@
 							}
 							delete this.opponent.squadron[name];
 						}
-						// break;
 					}
 				}
 			}
@@ -803,6 +805,7 @@
 					text = 'Поздравляем! Вы выиграли!';
 				}
 				Controller.showServiceText(text);
+				buttonNewGame.dataset.hidden = false;
 			// бой продолжается
 			} else if (this.opponent === human) {
 				this.tempShip.hits++;
@@ -882,7 +885,7 @@
 
 	buttonPlay.addEventListener('click', function(e) {
 		buttonPlay.dataset.hidden = true;
-		getElement('instruction').hidden = true;
+		instruction.hidden = true;
 		computerfield.parentElement.hidden = false;
 
 		computer = new Field(computerfield);
