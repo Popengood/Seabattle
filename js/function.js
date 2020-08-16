@@ -716,7 +716,6 @@
 			setTimeout(() => explosion.classList.remove('active'), 250);
 			setTimeout(() => explosion.parentElement.removeChild(explosion), 300);
 
-
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
 				case 0: // промах
@@ -830,10 +829,6 @@
 				setTimeout(() => this.makeShot(), 2000);
 			}
 		}
-
-		resetGame() {
-
-		}
 	}
 
 	///////////////////////////////////////////
@@ -913,8 +908,6 @@
 		battle.coordsFixed = [];
 		battle.coordsAroundHit = [];
 		battle.resetTempShip();
-
-		console.log('battle = ', battle);
 	});
 
 	/////////////////////////////////////////////////
