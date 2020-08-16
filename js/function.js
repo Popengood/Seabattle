@@ -841,6 +841,7 @@
 
 	const shipsCollection = getElement('ships_collection');
 	const initialShips = document.querySelector('.wrap + .initial-ships');
+	const toptext = getElement('text_top');
 	const buttonPlay = getElement('play');
 	const buttonNewGame = getElement('newgame');
 
@@ -885,8 +886,7 @@
 		buttonPlay.dataset.hidden = true;
 		instruction.hidden = true;
 		computerfield.parentElement.hidden = false;
-		// выводим сообщение над игровыми полями
-		getElement('text_top').innerHTML = 'Морской бой между эскадрами';
+		toptext.innerHTML = 'Морской бой между эскадрами';
 
 		computer = new Field(computerfield);
 		computer.cleanField();
@@ -901,6 +901,7 @@
 		computerfield.parentElement.hidden = true;
 		instruction.hidden = false;
 		human.cleanField();
+		toptext.innerHTML = 'Расстановка кораблей';
 		Controller.SERVICE_TEXT.innerHTML = '';
 
 		startGame = false;
