@@ -488,11 +488,7 @@
 
 		init() {
 			// Рандомно выбираем игрока и его противника
-			const random = Field.getRandom(1);
-
-			// test row !!!!!
-			// const random = 1;
-			
+			const random = Field.getRandom(1);			
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
 
@@ -501,7 +497,7 @@
 			this.setCoordsShot();
 
 			// обработчики события для игрока
-			if (isHandlerController === false) {
+			if (!isHandlerController) {
 				computerfield.addEventListener('click', this.makeShot.bind(this));
 				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
 				isHandlerController = true;
@@ -834,6 +830,10 @@
 				setTimeout(() => this.makeShot(), 2000);
 			}
 		}
+
+		resetGame() {
+
+		}
 	}
 
 	///////////////////////////////////////////
@@ -847,6 +847,7 @@
 	const shipsCollection = getElement('ships_collection');
 	const initialShips = document.querySelector('.wrap + .initial-ships');
 	const buttonPlay = getElement('play');
+	const buttonNewGame = getElement('newgame');
 
 	getElement('type_placement').addEventListener('click', function(e) {
 		if (e.target.tagName != 'SPAN') return;
@@ -883,6 +884,8 @@
 		placement.setObserver();
 	});
 
+	let battle = null;
+
 	buttonPlay.addEventListener('click', function(e) {
 		buttonPlay.dataset.hidden = true;
 		instruction.hidden = true;
@@ -893,8 +896,25 @@
 		computer.randomLocationShips();
 		startGame = true;
 
-		const battle = new Controller();
+		if (!battle) battle = new Controller();
 		battle.init();
+	});
+
+	buttonNewGame.addEventListener('click', function(e) {
+		computerfield.parentElement.hidden = true;
+		instruction.hidden = false;
+		human.cleanField();
+		Controller.SERVICE_TEXT.innerHTML = '';
+
+		startGame = false;
+		compShot = false;
+
+		battle.coordsRandom = [];
+		battle.coordsFixed = [];
+		battle.coordsAroundHit = [];
+		battle.resetTempShip();
+
+		console.log('battle = ', battle);
 	});
 
 	/////////////////////////////////////////////////
