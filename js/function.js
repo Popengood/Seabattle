@@ -885,6 +885,8 @@
 		buttonPlay.dataset.hidden = true;
 		instruction.hidden = true;
 		computerfield.parentElement.hidden = false;
+		// выводим сообщение над игровыми полями
+		getElement('text_top').innerHTML = 'Морской бой между эскадрами';
 
 		computer = new Field(computerfield);
 		computer.cleanField();
