@@ -251,16 +251,16 @@
 	///////////////////////////////////////////
 
 	class Placement {
+		static FIELD = getElement('field_human');
+		static FRAME = getCoordinates(Placement.FIELD);
+		static LEFT = Placement.FRAME.left;
+		static RIGHT = Placement.FRAME.right;
+		static TOP = Placement.FRAME.top;
+		static BOTTOM = Placement.FRAME.bottom;
+		
 		constructor() {
-			this.field = humanfield;
 			this.dragObject = {};
 			this.pressed = false;
-
-			let { left, right, top, bottom } = getCoordinates(this.field);
-			this.fieldLeft = left;
-			this.fieldRight = right;
-			this.fieldTop = top;
-			this.fieldBottom = bottom;
 		}
 
 		static getShipName = el => el.getAttribute('id');
@@ -272,7 +272,7 @@
 		setObserver() {
 			if (isHandlerPlacement) return;
 			document.addEventListener('mousedown', this.onMouseDown.bind(this));
-			this.field.addEventListener('contextmenu', this.rotationShip.bind(this));
+			Placement.FIELD.addEventListener('contextmenu', this.rotationShip.bind(this));
 			document.addEventListener('mousemove', this.onMouseMove.bind(this));
 			document.addEventListener('mouseup', this.onMouseUp.bind(this));
 			isHandlerPlacement = true;
@@ -301,7 +301,7 @@
 			};
 
 			// редактируем положение корабля на игровом поле
-			if (el.parentElement === this.field) {
+			if (el.parentElement === Placement.FIELD) {
 				const name = Placement.getShipName(el);
 				this.dragObject.kx = human.squadron[name].kx;
 				this.dragObject.ky = human.squadron[name].ky;
@@ -339,7 +339,7 @@
 
 			// проверяем, что клон находится в пределах игрового поля, с учётом
 			// небольших погрешностей (14px )
-			if (left >= this.fieldLeft - 14 && right <= this.fieldRight + 14 && top >= this.fieldTop - 14 && bottom <= this.fieldBottom + 14) {
+			if (left >= Placement.LEFT - 14 && right <= Placement.RIGHT + 14 && top >= Placement.TOP - 14 && bottom <= Placement.BOTTOM + 14) {
 				const coords = this.getCoordsCloneInMatrix({left, right, top, bottom});
 				const obj = {
 					x: coords.x,
@@ -429,7 +429,7 @@
 			const oldPosition = this.dragObject;
 
 			clone.rollback = () => {
-				if (oldPosition.parent == this.field) {
+				if (oldPosition.parent == Placement.FIELD) {
 					clone.style.left = `${oldPosition.left}px`;
 					clone.style.top = `${oldPosition.top}px`;
 					clone.style.zIndex = '';
@@ -455,7 +455,7 @@
 			this.clone.style.left = `${left}px`;
 			this.clone.style.top = `${top}px`;
 			// переносим клон внутрь игрового поля
-			this.field.appendChild(this.clone);
+			Placement.FIELD.appendChild(this.clone);
 			this.clone.classList.remove('success');
 
 			// создаём объект со свойствами нового корабля
@@ -472,14 +472,14 @@
 			const ship = new Ships(human, options);
 			ship.createShip();
 			// теперь в игровом поле находится сам корабль, поэтому его клон удаляем из DOM
-			this.field.removeChild(this.clone);
+			Placement.FIELD.removeChild(this.clone);
 		}
 
 		getCoordsCloneInMatrix({left, right, top, bottom} = coords) {
-			let computedLeft = left - this.fieldLeft,
-				computedRight = right - this.fieldLeft,
-				computedTop = top - this.fieldTop,
-				computedBottom = bottom - this.fieldTop;
+			let computedLeft = left - Placement.LEFT,
+				computedRight = right - Placement.LEFT,
+				computedTop = top - Placement.TOP,
+				computedBottom = bottom - Placement.TOP;
 
 			// создаём объект, куда поместим итоговые значения
 			const obj = {};
