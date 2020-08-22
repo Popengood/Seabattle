@@ -32,8 +32,7 @@ p {margin-bottom: 10px;}
 
 .outer {margin-bottom: 21px; padding-left: 38px;}
 .field {width: 366px; height: 363px; flex-shrink: 0; position: relative; background: url('../img/bg_play_field.png') no-repeat;}
-.field-human {  }
-.field-computer{margin-left: 31px;}
+.field-computer {margin-left: 31px;}
 
 .ships {width: 330px; height: 330px; position: relative; left: 29px; top: 27px;}
 .ship {height: 35px; position: absolute;}
