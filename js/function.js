@@ -251,21 +251,21 @@
 	///////////////////////////////////////////
 
 	class Placement {
+		// игровое поле игрока
 		static FIELD = getElement('field_human');
+		// объект с координатами стророн игрового поля
 		static FRAME = getCoordinates(Placement.FIELD);
-		static LEFT = Placement.FRAME.left;
-		static RIGHT = Placement.FRAME.right;
-		static TOP = Placement.FRAME.top;
-		static BOTTOM = Placement.FRAME.bottom;
 		
 		constructor() {
+			// объект перетаскивамого корабля
 			this.dragObject = {};
+			// флаг нажатия на левую кнопку мыши
 			this.pressed = false;
 		}
 
 		static getShipName = el => el.getAttribute('id');
 		static getCloneDecks = el => {
-			const type = el.getAttribute('id').slice(0, -1);
+			const type = Placement.getShipName(el).slice(0, -1);
 			return Field.SHIP_DATA[type][1];
 		}
 
@@ -279,10 +279,13 @@
 		}
 
 		onMouseDown(e) {
+			// если нажата не левая кнопка мыши или игра уже запущена
 			if (e.which != 1 || startGame) return;
 
+			// проверяем, что нажатие произошло над кораблём
 			const el = e.target.closest('.ship');
 			if(!el) return;
+
 			this.pressed = true;
 
 			// переносимый объект и его свойства
@@ -293,6 +296,8 @@
 				// координаты, с которых начат перенос
 				downX: e.pageX,
 				downY: e.pageY,
+				// координаты 'left' и 'top' используются при редактировании
+				// положения корабля на игровом поле
 				left: el.offsetLeft,
 				top: el.offsetTop,
 				// горизонтальное положение корабля
@@ -301,8 +306,10 @@
 			};
 
 			// редактируем положение корабля на игровом поле
+			// проверяем, что корабль находится на поле игрока
 			if (el.parentElement === Placement.FIELD) {
 				const name = Placement.getShipName(el);
+				// запоминаем текущее направление расположения палуб
 				this.dragObject.kx = human.squadron[name].kx;
 				this.dragObject.ky = human.squadron[name].ky;
 			}
@@ -311,11 +318,16 @@
 		onMouseMove(e) {
 			if (!this.pressed || !this.dragObject.el) return;
 
+			// получаем координаты сторон клона корабля
 			let { left, right, top, bottom } = getCoordinates(this.dragObject.el);
 
+			// если клона ещё не существует, создаём его
 			if (!this.clone) {
+				// получаем количество палуб у перемещаемого корабля
 				this.decks = Placement.getCloneDecks(this.dragObject.el);
+				// создаём клон, используя ранее полученные координаты его сторон
 				this.clone = this.creatClone({left, right, top, bottom}) || null;
+				// если по каким-то причинам клон создать не удалось, выходим из функции
 				if (!this.clone) return;
 
 				// вычисляем сдвиг курсора по координатам X и Y
@@ -327,20 +339,26 @@
 				document.body.appendChild(this.clone);
 
 				// удаляем устаревший экземпляр корабля, если он существует
+				// используется при редактировании положения корабля
 				this.removeShipFromSquadron(this.clone);
 			}
 
 			// координаты клона относительно BODY с учётом сдвига курсора
 			// относительно верней левой точки
 			let currentLeft = Math.round(e.pageX - this.shiftX),
-					currentTop = Math.round(e.pageY - this.shiftY);
+				currentTop = Math.round(e.pageY - this.shiftY);
 			this.clone.style.left = `${currentLeft}px`;
 			this.clone.style.top = `${currentTop}px`;
 
 			// проверяем, что клон находится в пределах игрового поля, с учётом
-			// небольших погрешностей (14px )
-			if (left >= Placement.LEFT - 14 && right <= Placement.RIGHT + 14 && top >= Placement.TOP - 14 && bottom <= Placement.BOTTOM + 14) {
-				const coords = this.getCoordsCloneInMatrix({left, right, top, bottom});
+			// небольших погрешностей (14px)
+			if (left >= Placement.FRAME.left - 14 && right <= Placement.FRAME.right + 14 && top >= Placement.FRAME.top - 14 && bottom <= Placement.FRAME.bottom + 14) {
+				// клон находится в пределах игрового поля,
+				// подсвечиваем его контур зелёным цветом
+				this.clone.classList.remove('unsuccess');
+				this.clone.classList.add('success');
+
+				const coords = this.getCoordsCloneInMatrix({ left, right, top, bottom });
 				const obj = {
 					x: coords.x,
 					y: coords.y,
@@ -349,12 +367,7 @@
 				};
 
 				const result = human.checkLocationShip(obj, this.decks);
-				if (result) {
-					// клон находится в пределах игрового поля,
-					// подсвечиваем его контур зелёным цветом
-					this.clone.classList.remove('unsuccess');
-					this.clone.classList.add('success');
-				} else {
+				if (!result) {
 					// в соседних клетках находятся ранее установленные корабли,
 					// подсвечиваем его контур красным цветом
 					this.clone.classList.remove('success');
@@ -368,15 +381,20 @@
 			}
 		}
 
-		onMouseUp() {
+		onMouseUp(e) {
 			this.pressed = false;
-			if (!this.clone) return;				
+			// если клона не существует
+			if (!this.clone) return;
 
+			// если координаты клона невалидны, возвращаем его на место,
+			// откуда был начат перенос
 			if (this.clone.classList.contains('unsuccess')) {
 				this.clone.classList.remove('unsuccess');
 				this.clone.rollback();
 			} else {
-				this.createShipAfterEditing();
+				// создаём экземпляр нового корабля, исходя
+				// из окончательных координат клона 
+				this.createShipAfterMoving();
 			}
 
 			// удаляем объекты 'clone' и 'dragObject'
@@ -424,31 +442,35 @@
 			}
 		}
 
-		creatClone(coords) {
+		creatClone() {
 			const clone = this.dragObject.el;
 			const oldPosition = this.dragObject;
 
 			clone.rollback = () => {
+				// редактиование положения корабля
+				// получаем родительский элемент и
+				// возвращаем корабль на исходное место на игровом поле
 				if (oldPosition.parent == Placement.FIELD) {
 					clone.style.left = `${oldPosition.left}px`;
 					clone.style.top = `${oldPosition.top}px`;
 					clone.style.zIndex = '';
 					oldPosition.parent.insertBefore(clone, oldPosition.next);
-					this.createShipAfterEditing();
+					this.createShipAfterMoving();
 				} else {
+					// возвращаем корабль в контейнер 'shipsCollection'
 					clone.removeAttribute('style');
 					oldPosition.parent.insertBefore(clone, oldPosition.next);
 				}
 			};
 			return clone;
-		};
+		}
 
 		removeClone() {
 			delete this.clone;
 			this.dragObject = {};
 		}
 
-		createShipAfterEditing() {
+		createShipAfterMoving() {
 			// получаем координаты, пересчитанные относительно игрового поля
 			const coords = getCoordinates(this.clone);
 			let { left, top, x, y } = this.getCoordsCloneInMatrix(coords);
@@ -476,10 +498,12 @@
 		}
 
 		getCoordsCloneInMatrix({left, right, top, bottom} = coords) {
-			let computedLeft = left - Placement.LEFT,
-				computedRight = right - Placement.LEFT,
-				computedTop = top - Placement.TOP,
-				computedBottom = bottom - Placement.TOP;
+			// вычисляем разницу координат соотвествующих сторон
+			// клона и игрового поля
+			let computedLeft = left - Placement.FRAME.left,
+				computedRight = right - Placement.FRAME.left,
+				computedTop = top - Placement.FRAME.top,
+				computedBottom = bottom - Placement.FRAME.top;
 
 			// создаём объект, куда поместим итоговые значения
 			const obj = {};
