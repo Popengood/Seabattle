@@ -33,6 +33,11 @@
 		};
 	};
 
+	// игровое поле игрока
+	const humanfield = getElement('field_human');
+	// игровое поле компьютера
+	const computerfield = getElement('field_computer');
+
 	class Field {
 		// размер стороны игрового поля в px
 		static FIELD_SIDE = 330;
@@ -251,10 +256,8 @@
 	///////////////////////////////////////////
 
 	class Placement {
-		// игровое поле игрока
-		static FIELD = getElement('field_human');
 		// объект с координатами стророн игрового поля
-		static FRAME = getCoordinates(Placement.FIELD);
+		static FRAME_COORDS = getCoordinates(humanfield);
 		
 		constructor() {
 			// объект перетаскивамого корабля
@@ -272,7 +275,7 @@
 		setObserver() {
 			if (isHandlerPlacement) return;
 			document.addEventListener('mousedown', this.onMouseDown.bind(this));
-			Placement.FIELD.addEventListener('contextmenu', this.rotationShip.bind(this));
+			humanfield.addEventListener('contextmenu', this.rotationShip.bind(this));
 			document.addEventListener('mousemove', this.onMouseMove.bind(this));
 			document.addEventListener('mouseup', this.onMouseUp.bind(this));
 			isHandlerPlacement = true;
@@ -307,7 +310,7 @@
 
 			// редактируем положение корабля на игровом поле
 			// проверяем, что корабль находится на поле игрока
-			if (el.parentElement === Placement.FIELD) {
+			if (el.parentElement === humanfield) {
 				const name = Placement.getShipName(el);
 				// запоминаем текущее направление расположения палуб
 				this.dragObject.kx = human.squadron[name].kx;
@@ -352,7 +355,7 @@
 
 			// проверяем, что клон находится в пределах игрового поля, с учётом
 			// небольших погрешностей (14px)
-			if (left >= Placement.FRAME.left - 14 && right <= Placement.FRAME.right + 14 && top >= Placement.FRAME.top - 14 && bottom <= Placement.FRAME.bottom + 14) {
+			if (left >= Placement.FRAME_COORDS.left - 14 && right <= Placement.FRAME_COORDS.right + 14 && top >= Placement.FRAME_COORDS.top - 14 && bottom <= Placement.FRAME_COORDS.bottom + 14) {
 				// клон находится в пределах игрового поля,
 				// подсвечиваем его контур зелёным цветом
 				this.clone.classList.remove('unsuccess');
@@ -450,7 +453,7 @@
 				// редактиование положения корабля
 				// получаем родительский элемент и
 				// возвращаем корабль на исходное место на игровом поле
-				if (oldPosition.parent == Placement.FIELD) {
+				if (oldPosition.parent == humanfield) {
 					clone.style.left = `${oldPosition.left}px`;
 					clone.style.top = `${oldPosition.top}px`;
 					clone.style.zIndex = '';
@@ -477,7 +480,7 @@
 			this.clone.style.left = `${left}px`;
 			this.clone.style.top = `${top}px`;
 			// переносим клон внутрь игрового поля
-			Placement.FIELD.appendChild(this.clone);
+			humanfield.appendChild(this.clone);
 			this.clone.classList.remove('success');
 
 			// создаём объект со свойствами нового корабля
@@ -494,16 +497,16 @@
 			const ship = new Ships(human, options);
 			ship.createShip();
 			// теперь в игровом поле находится сам корабль, поэтому его клон удаляем из DOM
-			Placement.FIELD.removeChild(this.clone);
+			humanfield.removeChild(this.clone);
 		}
 
 		getCoordsCloneInMatrix({left, right, top, bottom} = coords) {
 			// вычисляем разницу координат соотвествующих сторон
 			// клона и игрового поля
-			let computedLeft = left - Placement.FRAME.left,
-				computedRight = right - Placement.FRAME.left,
-				computedTop = top - Placement.FRAME.top,
-				computedBottom = bottom - Placement.FRAME.top;
+			let computedLeft = left - Placement.FRAME_COORDS.left,
+				computedRight = right - Placement.FRAME_COORDS.left,
+				computedTop = top - Placement.FRAME_COORDS.top,
+				computedBottom = bottom - Placement.FRAME_COORDS.top;
 
 			// создаём объект, куда поместим итоговые значения
 			const obj = {};
@@ -934,12 +937,11 @@
 	const buttonNewGame = getElement('newgame');
 
 	// получаем экземпляр игрового поля игрока
-	const humanfield = getElement('field_human');
 	const human = new Field(humanfield);
-
 	// экземпляр игрового поля только регистрируем
-	const computerfield = getElement('field_computer');
 	let computer = {};
+
+	let battle = null;
 
 	getElement('type_placement').addEventListener('click', function(e) {
 		// используем делегирование основанное на всплытии событий
@@ -998,8 +1000,6 @@
 		// устанавливаем обработчики событий
 		placement.setObserver();
 	});
-
-	let battle = null;
 
 	buttonPlay.addEventListener('click', function(e) {
 		buttonPlay.dataset.hidden = true;
