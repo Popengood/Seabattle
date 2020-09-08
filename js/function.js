@@ -412,19 +412,25 @@
 			const el = e.target.closest('.ship');
 			const name = Placement.getShipName(el);
 
+			// нет смысла вращать однопалубный корабль
 			if (human.squadron[name].decks == 1) return;
 
+			// объект с текущими коэффициентами и координатами корабля
 			const obj = {
 				kx: (human.squadron[name].kx == 0) ? 1 : 0,
 				ky: (human.squadron[name].ky == 0) ? 1 : 0,
 				x: human.squadron[name].x,
 				y: human.squadron[name].y
 			};
+			// очищаем данные о редактируемом корабле
 			const decks = human.squadron[name].arrDecks.length;
 			this.removeShipFromSquadron(el);
 			human.field.removeChild(el);
-			const result = human.checkLocationShip(obj, decks);
 
+			// проверяем валидность координат после поворота
+			// если координаты не валидны, возвращаем старые коэффициенты
+			// направления положения корабля
+			const result = human.checkLocationShip(obj, decks);
 			if(!result) {
 				obj.kx = (obj.kx == 0) ? 1 : 0;
 				obj.ky = (obj.ky == 0) ? 1 : 0;
@@ -438,6 +444,7 @@
 			const ship = new Ships(human, obj);
 			ship.createShip();
 
+			// кратковременно подсвечиваем рамку корабля красным цветом
 			if (!result) {
 				const el = getElement(name);
 				el.classList.add('unsuccess');
@@ -929,6 +936,8 @@
 
 	///////////////////////////////////////////
 
+	// родительский контейнер с инструкцией
+	const instruction = getElement('instruction');
 	// контейнер, в котором будут размещаться корабли, предназначенные для перетаскивания
 	// на игровое поле
 	const shipsCollection = getElement('ships_collection');
