@@ -361,10 +361,10 @@
 				this.clone.classList.remove('unsuccess');
 				this.clone.classList.add('success');
 
-				const coords = this.getCoordsCloneInMatrix({ left, right, top, bottom });
+				const { x, y } = this.getCoordsCloneInMatrix({ left, right, top, bottom });
 				const obj = {
-					x: coords.x,
-					y: coords.y,
+					x,
+					y,
 					kx: this.dragObject.kx,
 					ky: this.dragObject.ky
 				};
@@ -525,14 +525,20 @@
 		}
 
 		removeShipFromSquadron(el) {
+			// имя редактируемого корабля
 			const name = Placement.getShipName(el);
+			// если корабля с таким именем не существует,
+			// прекращаем работу функции
 			if (!human.squadron[name]) return;
 
+			// получаем массив с координатами палуб корабля и
+			// записываем в него нули, что означает - пустое место
 			const arr = human.squadron[name].arrDecks;
 			for (let coords of arr) {
 				const [x, y] = coords;
 				human.matrix[x][y] = 0;
 			}
+			// удаляем всю информацию о корабле из массива эскадры
 			delete human.squadron[name];
 		}
 	}
