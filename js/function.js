@@ -275,9 +275,9 @@
 		setObserver() {
 			if (isHandlerPlacement) return;
 			document.addEventListener('mousedown', this.onMouseDown.bind(this));
-			humanfield.addEventListener('contextmenu', this.rotationShip.bind(this));
 			document.addEventListener('mousemove', this.onMouseMove.bind(this));
 			document.addEventListener('mouseup', this.onMouseUp.bind(this));
+			humanfield.addEventListener('contextmenu', this.rotationShip.bind(this));
 			isHandlerPlacement = true;
 		}
 
