@@ -553,7 +553,7 @@
 	///////////////////////////////////////////
 
 	class Controller {
-		// массив базовых координат для формирования coordsFixed
+		// массив базовых координат для формирования coordsFixedHit
 		static START_POINTS = [
 			[ [6,0], [2,0], [0,2], [0,6] ],
 			[ [3,0], [7,0], [9,2], [9,6] ]
@@ -566,9 +566,9 @@
 			this.opponent = '';
 			this.text = '';
 			// массив с координатами выстрелов при рандомном выборе
-			this.coordsRandom = [];
+			this.coordsRandomHit = [];
 			// массив с заранее вычисленными координатами выстрелов
-			this.coordsFixed = [];
+			this.coordsFixedHit = [];
 			// массив с координатами вокруг клетки с попаданием
 			this.coordsAroundHit = [];
 			// временный объект корабля, куда будем заносить координаты
@@ -576,17 +576,20 @@
 			this.resetTempShip();
 		}
 
+		// вывод информационных сообщений
 		static showServiceText = text => {
 			Controller.SERVICE_TEXT.innerHTML = text;
 		}
 
-		static getCoordsIcon(el) {
+		// преобразование абсолютных координат иконок в координаты матрицы
+		static getCoordsIcon = el => {
 			const x = el.style.top.slice(0, -2) / Field.SHIP_SIDE;
 			const y = el.style.left.slice(0, -2) / Field.SHIP_SIDE;
 			return [x, y];
 		}
 
-		static removeElementArray(arr, [x, y]) {
+		// удаление ненужных координат из массива
+		static removeElementArray = (arr, [x, y]) => {
 			return arr.filter(item => item[0] != x || item[1] != y);
 		}
 
@@ -597,7 +600,7 @@
 			this.opponent = (this.player === human) ? computer : human;
 
 			// генерируем координаты выстрелов компьютера и заносим их в
-			// массивы coordsRandom и coordsFixed
+			// массивы coordsRandomHit и coordsFixedHit
 			this.setCoordsShot();
 
 			// обработчики события для игрока
@@ -621,17 +624,17 @@
 		setCoordsShot() {
 			for (let i = 0; i < 10; i++) {
 				for(let j = 0; j < 10; j++) {
-					this.coordsRandom.push([i, j]);
+					this.coordsRandomHit.push([i, j]);
 				}
 			}
-			this.coordsRandom.sort((a, b) => Math.random() - 0.5);
+			this.coordsRandomHit.sort((a, b) => Math.random() - 0.5);
 
 			let x, y;
 
 			for (let arr of Controller.START_POINTS[0]) {
 				x = arr[0]; y = arr[1];
 				while (x <= 9 && y <= 9) {
-					this.coordsFixed.push([x, y]);
+					this.coordsFixedHit.push([x, y]);
 					x = (x <= 9) ? x : 9;
 					y = (y <= 9) ? y : 9;
 					x++; y++;
@@ -641,13 +644,13 @@
 			for (let arr of Controller.START_POINTS[1]) {
 				x = arr[0]; y = arr[1];
 				while(x >= 0 && x <= 9 && y <= 9) {
-					this.coordsFixed.push([x, y]);
+					this.coordsFixedHit.push([x, y]);
 					x = (x >= 0 && x <= 9) ? x : (x < 0) ? 0 : 9;
 					y = (y <= 9) ? y : 9;
 					x--; y++;
 				};
 			}
-			this.coordsFixed = this.coordsFixed.reverse();
+			this.coordsFixedHit = this.coordsFixedHit.reverse();
 		}
 
 		setCoordsAroundHit(x, y) {
@@ -694,10 +697,10 @@
 			if (this.coordsAroundHit.length > 0) {
 				this.coordsAroundHit = Controller.removeElementArray(this.coordsAroundHit, coords);
 			}
-			if (this.coordsFixed.length > 0) {
-				this.coordsFixed = Controller.removeElementArray(this.coordsFixed, coords);
+			if (this.coordsFixedHit.length > 0) {
+				this.coordsFixedHit = Controller.removeElementArray(this.coordsFixedHit, coords);
 			}
-			this.coordsRandom = Controller.removeElementArray(this.coordsRandom, coords);
+			this.coordsRandomHit = Controller.removeElementArray(this.coordsRandomHit, coords);
 		}
 
 		checkUselessCell (coords) {
@@ -783,7 +786,7 @@
 		}
 
 		getCoordsForShot() {
-			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixed.length > 0) ? this.coordsFixed.pop() : this.coordsRandom.pop();
+			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixedHit.length > 0) ? this.coordsFixedHit.pop() : this.coordsRandomHit.pop();
 			
 			// удаляем полученные координаты из всех массивов
 			this.removeCoordsFromArrays(coords);
@@ -1050,8 +1053,8 @@
 		startGame = false;
 		compShot = false;
 
-		control.coordsRandom = [];
-		control.coordsFixed = [];
+		control.coordsRandomHit = [];
+		control.coordsFixedHit = [];
 		control.coordsAroundHit = [];
 		control.resetTempShip();
 	});
