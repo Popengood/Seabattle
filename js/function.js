@@ -558,6 +558,7 @@
 			[ [6,0], [2,0], [0,2], [0,6] ],
 			[ [3,0], [7,0], [9,2], [9,6] ]
 		];
+		// Блок, в который выводятся информационные сообщения по ходу игры
 		static SERVICE_TEXT = getElement('service_text');
 
 		constructor() {
@@ -956,7 +957,7 @@
 	// экземпляр игрового поля только регистрируем
 	let computer = {};
 
-	let battle = null;
+	let control = null;
 
 	getElement('type_placement').addEventListener('click', function(e) {
 		// используем делегирование основанное на всплытии событий
@@ -1017,18 +1018,25 @@
 	});
 
 	buttonPlay.addEventListener('click', function(e) {
+		// скрываем не нужные для игры элементы
 		buttonPlay.dataset.hidden = true;
 		instruction.hidden = true;
+		// показываем игровое поле компьютера
 		computerfield.parentElement.hidden = false;
 		toptext.innerHTML = 'Морской бой между эскадрами';
 
+		// создаём экземпляр игрового поля компьютера
 		computer = new Field(computerfield);
+		// очищаем поле от ранее установленных кораблей
 		computer.cleanField();
 		computer.randomLocationShips();
+		// устанавливаем флаг запуска игры
 		startGame = true;
 
-		if (!battle) battle = new Controller();
-		battle.init();
+		// создаём экземпляр контроллера, управляющего игрой
+		if (!control) control = new Controller();
+		// запускаем игру
+		control.init();
 	});
 
 	buttonNewGame.addEventListener('click', function(e) {
@@ -1042,10 +1050,10 @@
 		startGame = false;
 		compShot = false;
 
-		battle.coordsRandom = [];
-		battle.coordsFixed = [];
-		battle.coordsAroundHit = [];
-		battle.resetTempShip();
+		control.coordsRandom = [];
+		control.coordsFixed = [];
+		control.coordsAroundHit = [];
+		control.resetTempShip();
 	});
 
 	/////////////////////////////////////////////////
