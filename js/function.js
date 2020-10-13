@@ -605,7 +605,9 @@
 
 			// обработчики события для игрока
 			if (!isHandlerController) {
+				//выстрел
 				computerfield.addEventListener('click', this.makeShot.bind(this));
+				// устанавливаем маркер на заведомо пустую клетку
 				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
 				isHandlerController = true;
 			}
@@ -678,13 +680,21 @@
 
 		setUselessCell(e) {
 			e.preventDefault();
-			if (e !== undefined && e.which != 3 || compShot) return;
+			// проверяем нажатие правой кнопки мыши и флага, блокирующего
+			// действия игрока
+			if (e.which != 3 || compShot) return;
 
+			// преобразуем координаты клика относительно окна браузера, в кординаты матрицы
 			const coords = this.transformCoordsInMatrix(e, computer);
+			// проверяем наличие иконок по полученным координатам
+			// если иконка присутствует, то, в зависимости от типа, удаляем её или
+			// кратковременно подсвечиваем красным цветом
 			const check = this.checkUselessCell(coords);
+			// если по данным координатам иконки отсутствуют, устанавливаем маркер
+			// пустой клетки
 			if (check) {
 				this.showIcons(this.opponent, coords, 'shaded-cell');
-			} 
+			}
 		}
 
 		transformCoordsInMatrix(e, self) {
@@ -703,20 +713,29 @@
 			this.coordsRandomHit = Controller.removeElementArray(this.coordsRandomHit, coords);
 		}
 
-		checkUselessCell (coords) {
+		checkUselessCell(coords) {
+			// данная строчка кода используется при установке маркера игроком
+			// если значение матрицы по полученным координатам отлично от нуля,
+			// считаем, что в этом месте уже установлена некая иконка  
 			if (computer.matrix[coords[0]][coords[1]] > 1) return false;
 
+			// получаем коллекцию всех иконок на игровом поле противника
 			const icons = this.opponent.field.querySelectorAll('.icon-field');
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
+				// получаем координаты иконки и сравниваем их с аргументом функции
 				const [x, y] = Controller.getCoordsIcon(icon);
 				if (coords[0] == x && coords[1] == y && icon.classList.contains('shaded-cell')) {
+					// если координаты иконки и координаты полученные в аргументе совпали,
+					// а также, иконка является маркером пустой клетки
+					// проверяем, какая функция вызвала функцию checkUselessCell
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setUselessCell') {
+						// удаляем маркер пустой клетки
 						icon.parentElement.removeChild(icon);
 					} else {
-						// окрашиваем иконку в красный цвет
+						// на 0.5s окрашиваем маркер в красный цвет
 						icon.classList.add('shaded-cell_red');
 						setTimeout(() => { icon.classList.remove('shaded-cell_red') }, 500);
 					}
