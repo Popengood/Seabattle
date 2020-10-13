@@ -720,15 +720,14 @@
 			if (computer.matrix[coords[0]][coords[1]] > 1) return false;
 
 			// получаем коллекцию всех иконок на игровом поле противника
-			const icons = this.opponent.field.querySelectorAll('.icon-field');
+			const icons = this.opponent.field.querySelectorAll('.shaded-cell');
 			if (icons.length == 0) return true;
 
 			for (let icon of icons) {
 				// получаем координаты иконки и сравниваем их с аргументом функции
 				const [x, y] = Controller.getCoordsIcon(icon);
-				if (coords[0] == x && coords[1] == y && icon.classList.contains('shaded-cell')) {
+				if (coords[0] == x && coords[1] == y) {
 					// если координаты иконки и координаты полученные в аргументе совпали,
-					// а также, иконка является маркером пустой клетки
 					// проверяем, какая функция вызвала функцию checkUselessCell
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setUselessCell') {
