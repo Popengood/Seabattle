@@ -839,7 +839,7 @@
 			const explosion = this.opponent.field.querySelector('.explosion');
 			setTimeout(() => explosion.classList.add('active'), 0);
 			setTimeout(() => explosion.classList.remove('active'), 250);
-			setTimeout(() => explosion.parentElement.removeChild(explosion), 300);
+			setTimeout(() => explosion.remove(), 300);
 
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
