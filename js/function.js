@@ -719,7 +719,7 @@
 			// считаем, что в этом месте уже установлена некая иконка  
 			if (computer.matrix[coords[0]][coords[1]] > 1) return false;
 
-			// получаем коллекцию всех иконок на игровом поле противника
+			// получаем коллекцию маркеров на игровом поле противника
 			const icons = this.opponent.field.querySelectorAll('.shaded-cell');
 			if (icons.length == 0) return true;
 
