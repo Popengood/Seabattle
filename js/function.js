@@ -732,7 +732,7 @@
 					const f = (new Error()).stack.split('\n')[2].trim().split(' ')[1];
 					if (f == 'Controller.setUselessCell') {
 						// удаляем маркер пустой клетки
-						icon.parentElement.removeChild(icon);
+						icon.remove();
 					} else {
 						// на 0.5s окрашиваем маркер в красный цвет
 						icon.classList.add('shaded-cell_red');
