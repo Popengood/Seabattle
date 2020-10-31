@@ -789,16 +789,20 @@
 		}
 
 		showIcons(opponent, [x, y], iconClass) {
+			// экземпляр игрового поля на котором будет размещена иконка
 			const field = opponent.field;
+			// небольшая задержка при формировании иконок промаха и попадания
 			if (iconClass === 'dot' || iconClass === 'red-cross') {
 				setTimeout(() => fn(), 400);
 			} else {
 				fn();
 			}
 			function fn() {
+				// создание элемента и добавление ему класса и стилей
 				const span = document.createElement('span');
 				span.className = `icon-field ${iconClass}`;
 				span.style.cssText = `left:${y * Field.SHIP_SIDE}px; top:${x * Field.SHIP_SIDE}px;`;
+				// размещаем иконку на игровом поле
 				field.appendChild(span);
 			}
 		}
