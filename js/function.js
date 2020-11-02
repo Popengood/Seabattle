@@ -841,9 +841,8 @@
 			// показываем и удаляем иконку выстрела
 			this.showIcons(this.opponent, [x, y], 'explosion');
 			const explosion = this.opponent.field.querySelector('.explosion');
-			setTimeout(() => explosion.classList.add('active'), 0);
-			setTimeout(() => explosion.classList.remove('active'), 250);
-			setTimeout(() => explosion.remove(), 300);
+			explosion.classList.add('active');
+			setTimeout(() => explosion.remove(), 430);
 
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
