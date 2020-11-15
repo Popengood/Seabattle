@@ -900,22 +900,23 @@
 			text = (this.player === human) ? 'Поздравляем! Вы попали. Ваш выстрел.' : 'Компьютер попал в ваш корабль. Выстрел компьютера';
 			setTimeout(() => Controller.showServiceText(text), 400);
 
-			// увеличиваем счётчик попаданий
-			// если счётчик === количеству палуб, удаляем корабль из эскадры
+			// перебираем корабли эскадры противника
 			for (let name in this.opponent.squadron) {
 				const dataShip = this.opponent.squadron[name];
 				for (let value of dataShip.arrDecks) {
-					if (value[0] == x && value[1] == y) {
-						dataShip.hits++;
-						if (dataShip.hits == dataShip.arrDecks.length) {
-							if (this.opponent === human) {
-								// код компьютера: сохраняем координаты первой палубы
-								this.tempShip.x0 = dataShip.x;
-								this.tempShip.y0 = dataShip.y;
-							}
-							delete this.opponent.squadron[name];
-						}
+					// перебираем координаты палуб и сравниваем с координатами попадания
+					// если координаты не совпадают, переходим к следующей транзакции
+					if (value[0] != x || value[1] != y) continue;
+					dataShip.hits++;
+					if (dataShip.hits != dataShip.arrDecks.length) continue;
+					// код компьютера: сохраняем координаты первой палубы
+					if (this.opponent === human) {
+						this.tempShip.x0 = dataShip.x;
+						this.tempShip.y0 = dataShip.y;
 					}
+					// если количество попаданий в корабль равно количеству палуб,
+					// удаляем данный корабль из массива эскадры
+					delete this.opponent.squadron[name];
 				}
 			}
 
