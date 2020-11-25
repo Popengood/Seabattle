@@ -918,7 +918,7 @@
 					// если координаты не совпадают, переходим к следующей транзакции
 					if (value[0] != x || value[1] != y) continue;
 					dataShip.hits++;
-					if (dataShip.hits != dataShip.arrDecks.length) continue;
+					if (dataShip.hits < dataShip.arrDecks.length) break;
 					// код для выстрела компьютера: сохраняем координаты первой палубы
 					if (this.opponent === human) {
 						this.tempShip.x0 = dataShip.x;
