@@ -595,7 +595,7 @@
 
 		init() {
 			// Рандомно выбираем игрока и его противника
-			const random = Field.getRandom(1);			
+			const random = Field.getRandom(1);
 			this.player = (random == 0) ? human : computer;
 			this.opponent = (this.player === human) ? computer : human;
 
@@ -605,7 +605,7 @@
 
 			// обработчики события для игрока
 			if (!isHandlerController) {
-				//выстрел
+				//выстрел игрока
 				computerfield.addEventListener('click', this.makeShot.bind(this));
 				// устанавливаем маркер на заведомо пустую клетку
 				computerfield.addEventListener('contextmenu', this.setUselessCell.bind(this));
@@ -618,21 +618,26 @@
 			} else {
 				compShot = true;
 				this.text = 'Первым стреляет компьютер';
+				// выстрел компьютера
 				setTimeout(() => this.makeShot(), 2000);
 			}
 			Controller.showServiceText(this.text);
 		}
 
 		setCoordsShot() {
+			// получаем координаты каждой клетки игрового поля
+			// и записываем их в массив
 			for (let i = 0; i < 10; i++) {
 				for(let j = 0; j < 10; j++) {
 					this.coordsRandomHit.push([i, j]);
 				}
 			}
+			// рандомно перемешиваем массив с координатами
 			this.coordsRandomHit.sort((a, b) => Math.random() - 0.5);
 
 			let x, y;
 
+			// получаем координаты для обстрела по диагонали вправо-вниз
 			for (let arr of Controller.START_POINTS[0]) {
 				x = arr[0]; y = arr[1];
 				while (x <= 9 && y <= 9) {
@@ -643,6 +648,7 @@
 				}
 			}
 
+			// получаем координаты для обстрела по диагонали вправо-вверх
 			for (let arr of Controller.START_POINTS[1]) {
 				x = arr[0]; y = arr[1];
 				while(x >= 0 && x <= 9 && y <= 9) {
@@ -652,6 +658,8 @@
 					x--; y++;
 				};
 			}
+			// изменим порядок следования элементов на обратный,
+			// чтобы обстрел происходил в очерёдности согласно рисунка
 			this.coordsFixedHit = this.coordsFixedHit.reverse();
 		}
 
@@ -761,9 +769,11 @@
 		}
 
 		markUselessCellAroundShip(coords){
+			// присваиваем переменным соотвествующие значения из объекта tempShip
 			const {hits, kx, ky, x0, y0} = this.tempShip;
 			let points;
 
+			// рассчитываем координаты пустых клеток
 			// однопалубный корабль
 			if (this.tempShip.hits == 1) {
 				points = [
@@ -808,8 +818,7 @@
 		}
 
 		getCoordsForShot() {
-			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixedHit.length > 0) ? this.coordsFixedHit.pop() : this.coordsRandomHit.pop();
-			
+			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixedHit.length > 0) ? this.coordsFixedHit.pop() : this.coordsRandomHit.pop();			
 			// удаляем полученные координаты из всех массивов
 			this.removeCoordsFromArrays(coords);
 			return coords;
@@ -897,6 +906,7 @@
 			// устанавливаем иконку попадания и записываем попадание в матрицу
 			this.showIcons(this.opponent, [x, y], 'red-cross');
 			this.opponent.matrix[x][y] = 4;
+			// выводим текст, зависящий от стреляющего
 			text = (this.player === human) ? 'Поздравляем! Вы попали. Ваш выстрел.' : 'Компьютер попал в ваш корабль. Выстрел компьютера';
 			setTimeout(() => Controller.showServiceText(text), 400);
 
@@ -909,7 +919,7 @@
 					if (value[0] != x || value[1] != y) continue;
 					dataShip.hits++;
 					if (dataShip.hits != dataShip.arrDecks.length) continue;
-					// код компьютера: сохраняем координаты первой палубы
+					// код для выстрела компьютера: сохраняем координаты первой палубы
 					if (this.opponent === human) {
 						this.tempShip.x0 = dataShip.x;
 						this.tempShip.y0 = dataShip.y;
@@ -933,6 +943,7 @@
 					text = 'Поздравляем! Вы выиграли!';
 				}
 				Controller.showServiceText(text);
+				// показываем кнопку продолжения игры
 				buttonNewGame.dataset.hidden = false;
 			// бой продолжается
 			} else if (this.opponent === human) {
