@@ -16,7 +16,7 @@ body {font: normal 18px SegoePrint; line-height: 24px; color: #4530af;}
 p {margin-bottom: 10px;}
 
 /* buttons */
-.btn-play {width: 144px; height: 45px; font-family: SegoePrint; font-size: 24px; line-height: 40px; color: #4530af; text-align: center; margin: 0 auto; background-position: 0 -150px; cursor: pointer;}
+.btn-play {width: 144px; height: 45px; font-family: SegoePrint; font-size: 24px; line-height: 40px; color: #4530af; text-align: center; background-position: 0 -150px; cursor: pointer;}
 .btn-newgame { font-size: 19px; margin-top: 10px; }
 
 /* display */
