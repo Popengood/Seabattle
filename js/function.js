@@ -247,7 +247,7 @@
 				// когда количество кораблей в эскадре достигнет 10, т.е. все корабли
 				// сгенерированны, то можно показать кнопку запуска игры
 				if (Object.keys(player.squadron).length == 10) {
-					buttonPlay.dataset.hidden = false;
+					buttonPlay.hidden = false;
 				}
 			}
 		}
@@ -944,7 +944,7 @@
 				}
 				Controller.showServiceText(text);
 				// показываем кнопку продолжения игры
-				buttonNewGame.dataset.hidden = false;
+				buttonNewGame.hidden = false;
 			// бой продолжается
 			} else if (this.opponent === human) {
 				this.tempShip.hits++;
@@ -1005,7 +1005,7 @@
 
 		// если мы уже создали эскадру ранее, то видна кнопка начала игры
 		// скроем её на время повторной расстановки кораблей
-		buttonPlay.dataset.hidden = true;
+		buttonPlay.hidden = true;
 		// очищаем игровое поле игрока перед повторной расстановкой кораблей
 		human.cleanField();
 
@@ -1059,7 +1059,7 @@
 
 	buttonPlay.addEventListener('click', function(e) {
 		// скрываем не нужные для игры элементы
-		buttonPlay.dataset.hidden = true;
+		buttonPlay.hidden = true;
 		instruction.hidden = true;
 		// показываем игровое поле компьютера
 		computerfield.parentElement.hidden = false;
@@ -1080,7 +1080,7 @@
 	});
 
 	buttonNewGame.addEventListener('click', function(e) {
-		buttonNewGame.dataset.hidden = true;
+		buttonNewGame.hidden = true;
 		computerfield.parentElement.hidden = true;
 		instruction.hidden = false;
 		human.cleanField();
