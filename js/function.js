@@ -663,9 +663,8 @@
 			this.coordsFixedHit = this.coordsFixedHit.reverse();
 		}
 
-		setCoordsAroundHit(x, y) {
+		setCoordsAroundHit(x, y, coords) {
 			let {firstHit, kx, ky} = this.tempShip;
-			let arr = [];
 
 			// массив пустой, значит это первое попадание в данный корабль
 			if (firstHit.length == 0) {
@@ -678,20 +677,18 @@
 				this.tempShip.ky = (Math.abs(firstHit[1] - y) == 1) ? 1 : 0;
 			}
 
-			// вычисляем координаты обстрела вокруг попадания в зависимости
-			// от направления расположения корабля
-			// вертикальное расположение
-			if (x > 0) this.coordsAroundHit.push([x - 1, y]);
-			if (x < 9) this.coordsAroundHit.push([x + 1, y]);
-			// горизонтальное расположение
-			if (y > 0) this.coordsAroundHit.push([x, y - 1]);
-			if (y < 9) this.coordsAroundHit.push([x, y + 1]);
+			// вычисляем координаты обстрела вокруг попадания
+			// проверяем корректность полученных координат обстрела
 
-			// валидация координат с помощью фильтра
-			// отфильтровываем координаты по которым уже стреляли ранее или
-			// с установлеными маркерами гарантированно пустых клеток
-			arr = this.coordsAroundHit.filter(([x, y]) => human.matrix[x][y] == 0 || human.matrix[x][y] == 1);
-			this.coordsAroundHit = [...arr];
+			for (let coord of coords) {
+				x = coord[0]; y = coord[1];
+				// координаты за пределами игрового поля
+				if (x < 0 || x > 9 || y < 0 || y > 9) continue;
+				// по данным координатам установлен промах или маркер пустой клетки
+				if (human.matrix[x][y] != 0 && human.matrix[x][y] != 1) continue;
+				// валидные координаты добавляем в массив
+				this.coordsAroundHit.push([x, y]);
+			}
 		}
 
 		setUselessCell(e) {
@@ -760,14 +757,16 @@
 			return true;
 		}
 
+		// устанавливаем маркеры вокруг корабля при попадании
 		markUselessCell(coords) {
 			let n = 1, x, y;
+
 			for (let coord of coords) {
 				x = coord[0]; y = coord[1];
 				// координаты за пределами игрового поля
 				if (x < 0 || x > 9 || y < 0 || y > 9) continue;
 				// по этим координатам в матрице уже прописан промах или маркер пустой клетки
-				if (human.matrix[x][y] != 0) continue;
+				if (human.matrix[x][y] == 2 || human.matrix[x][y] == 3) continue;
 				// прописываем значение, соответствующее маркеру пустой клетки
 				human.matrix[x][y] = 2;
 				// вывоим маркеры пустых клеток по полученным координатам
@@ -780,15 +779,16 @@
 			}
 		}
 
-		markUselessCellAroundShip(coords){
+		// устанавливаем маркеры после уничтожения корабля
+		markUselessCellAroundShip(){
 			// присваиваем переменным соотвествующие значения из объекта tempShip
 			const {hits, kx, ky, x0, y0} = this.tempShip;
-			let points;
+			let coords;
 
 			// рассчитываем координаты пустых клеток
 			// однопалубный корабль
 			if (this.tempShip.hits == 1) {
-				points = [
+				coords = [
 					// верхняя
 					[x0 - 1, y0],
 					// нижняя
@@ -800,14 +800,14 @@
 				];
 			// многопалубный корабль
 			} else {
-				points = [
+				coords = [
 					// левая / верхняя
 					[x0 - kx, y0 - ky],
 					// правая / нижняя
 					[x0 + kx * hits, y0 + ky * hits]
 				];
 			}
-			this.markUselessCell(points);
+			this.markUselessCell(coords);
 		}
 
 		showIcons(opponent, [x, y], iconClass) {
@@ -903,7 +903,7 @@
 				// обстреляны все возможные клетки для данного корабля
 				if (this.coordsAroundHit.length == 0 && this.tempShip.hits > 0) {
 					// корабль потоплен, отмечаем useless cell вокруг него
-					this.markUselessCellAroundShip([x, y]);
+					this.markUselessCellAroundShip();
 					this.resetTempShip();
 				}
 				this.player = human;
@@ -961,19 +961,26 @@
 				buttonNewGame.hidden = false;
 			// бой продолжается
 			} else if (this.opponent === human) {
+				let coords;
 				this.tempShip.hits++;
+
 				// отмечаем клетки по диагонали, где точно не может стоять корабль
-				const coords = [
+				coords = [
 					[x - 1, y - 1],
 					[x - 1, y + 1],
 					[x + 1, y - 1],
 					[x + 1, y + 1]
 				];
-				// проверяем и отмечаем полученные координаты клеток
 				this.markUselessCell(coords);
 
 				// формируем координаты обстрела вокруг попадания
-				this.setCoordsAroundHit(x, y);
+				coords = [
+					[x - 1, y],
+					[x + 1, y],
+					[x, y - 1],
+					[x, y + 1]
+				];
+				this.setCoordsAroundHit(x, y, coords);
 
 				// max кол-во палуб у оставшихся кораблей
 				let obj = Object.values(human.squadron)
@@ -981,7 +988,7 @@
 				// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
 				if (this.tempShip.hits >= obj.arrDecks.length || this.coordsAroundHit.length == 0) {
 					// корабль потоплен, отмечаем useless cell вокруг него
-					this.markUselessCellAroundShip(coords);
+					this.markUselessCellAroundShip();
 					// очищаем массив coordsAroundHit и объект resetTempShip для
 					// обстрела следующего корабля
 					this.coordsAroundHit = [];
