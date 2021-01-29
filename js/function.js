@@ -713,22 +713,6 @@
 			}
 		}
 
-		transformCoordsInMatrix(e, self) {
-			const x = Math.trunc((e.pageY - self.fieldTop) / Field.SHIP_SIDE);
-			const y = Math.trunc((e.pageX - self.fieldLeft) / Field.SHIP_SIDE);
-			return [x, y];
-		}
-
-		removeCoordsFromArrays(coords) {
-			if (this.coordsAroundHit.length > 0) {
-				this.coordsAroundHit = Controller.removeElementArray(this.coordsAroundHit, coords);
-			}
-			if (this.coordsFixedHit.length > 0) {
-				this.coordsFixedHit = Controller.removeElementArray(this.coordsFixedHit, coords);
-			}
-			this.coordsRandomHit = Controller.removeElementArray(this.coordsRandomHit, coords);
-		}
-
 		checkUselessCell(coords) {
 			// данная строчка кода используется при установке маркера игроком
 			// если значение матрицы по полученным координатам отлично от нуля,
@@ -778,6 +762,22 @@
 				this.removeCoordsFromArrays(coord);
 				n++;
 			}
+		}
+
+		transformCoordsInMatrix(e, self) {
+			const x = Math.trunc((e.pageY - self.fieldTop) / Field.SHIP_SIDE);
+			const y = Math.trunc((e.pageX - self.fieldLeft) / Field.SHIP_SIDE);
+			return [x, y];
+		}
+
+		removeCoordsFromArrays(coords) {
+			if (this.coordsAroundHit.length > 0) {
+				this.coordsAroundHit = Controller.removeElementArray(this.coordsAroundHit, coords);
+			}
+			if (this.coordsFixedHit.length > 0) {
+				this.coordsFixedHit = Controller.removeElementArray(this.coordsFixedHit, coords);
+			}
+			this.coordsRandomHit = Controller.removeElementArray(this.coordsRandomHit, coords);
 		}
 
 		markUselessCellAroundShip(coords){
