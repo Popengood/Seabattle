@@ -677,7 +677,6 @@
 				this.tempShip.ky = (Math.abs(firstHit[1] - y) == 1) ? 1 : 0;
 			}
 
-			// вычисляем координаты обстрела вокруг попадания
 			// проверяем корректность полученных координат обстрела
 			for (let coord of coords) {
 				x = coord[0]; y = coord[1];
@@ -687,6 +686,21 @@
 				if (human.matrix[x][y] != 0 && human.matrix[x][y] != 1) continue;
 				// валидные координаты добавляем в массив
 				this.coordsAroundHit.push([x, y]);
+			}
+		}
+
+		isShipSunk() {
+			// max кол-во палуб у оставшихся кораблей
+			let obj = Object.values(human.squadron)
+				.reduce((a, b) => a.arrDecks.length > b.arrDecks.length ? a : b);
+			// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
+			if (this.tempShip.hits >= obj.arrDecks.length || this.coordsAroundHit.length == 0) {
+				// корабль потоплен, отмечаем useless cell вокруг него
+				this.markUselessCellAroundShip();
+				// очищаем массив coordsAroundHit и объект resetTempShip для
+				// обстрела следующего корабля
+				this.coordsAroundHit = [];
+				this.resetTempShip();
 			}
 		}
 
@@ -981,18 +995,9 @@
 				];
 				this.setCoordsAroundHit(x, y, coords);
 
-				// max кол-во палуб у оставшихся кораблей
-				let obj = Object.values(human.squadron)
-					.reduce((a, b) => a.arrDecks.length > b.arrDecks.length ? a : b);
-				// определяем, есть ли ещё корабли, с кол-вом палуб больше, чем попаданий
-				if (this.tempShip.hits >= obj.arrDecks.length || this.coordsAroundHit.length == 0) {
-					// корабль потоплен, отмечаем useless cell вокруг него
-					this.markUselessCellAroundShip();
-					// очищаем массив coordsAroundHit и объект resetTempShip для
-					// обстрела следующего корабля
-					this.coordsAroundHit = [];
-					this.resetTempShip();
-				}
+				// проверяем, потоплен ли корабль, в который было попадание
+				this.isShipSunk();
+
 				// после небольшой задержки, компьютер делает новый выстрел
 				setTimeout(() => this.makeShot(), 2000);
 			}
