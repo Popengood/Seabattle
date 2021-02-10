@@ -794,7 +794,7 @@
 
 		// устанавливаем маркеры после уничтожения корабля
 		markUselessCellAroundShip(){
-			// присваиваем переменным соотвествующие значения из объекта tempShip
+			// присваиваем переменным соответствующие значения из объекта tempShip
 			const {hits, kx, ky, x0, y0} = this.tempShip;
 			let coords;
 
@@ -842,6 +842,13 @@
 			}
 		}
 
+		showExplosion(x, y) {
+			this.showIcons(this.opponent, [x, y], 'explosion');
+			const explosion = this.opponent.field.querySelector('.explosion');
+			explosion.classList.add('active');
+			setTimeout(() => explosion.remove(), 430);
+		}
+
 		getCoordsForShot() {
 			const coords = (this.coordsAroundHit.length > 0) ? this.coordsAroundHit.pop() : (this.coordsFixedHit.length > 0) ? this.coordsFixedHit.pop() : this.coordsRandomHit.pop();			
 			// удаляем полученные координаты из всех массивов
@@ -877,10 +884,7 @@
 			}
 
 			// показываем и удаляем иконку выстрела
-			this.showIcons(this.opponent, [x, y], 'explosion');
-			const explosion = this.opponent.field.querySelector('.explosion');
-			explosion.classList.add('active');
-			setTimeout(() => explosion.remove(), 430);
+			this.showExplosion(x, y);
 
 			const v	= this.opponent.matrix[x][y];
 			switch(v) {
